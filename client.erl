@@ -7,7 +7,7 @@
 
 %% Produce initial state
 initial_state(Nick, GUIName) ->
-    #client_st { gui = GUIName }.
+    #client_st { nick = Nick, gui = GUIName }.
 
 %% ---------------------------------------------------------------------------
 
@@ -20,6 +20,8 @@ initial_state(Nick, GUIName) ->
 
 %% Connect to server
 handle(St, {connect, Server}) ->
+
+
     Data = "hello?",
     io:fwrite("Client is sending: ~p~n", [Data]),
     ServerAtom = list_to_atom(Server),
