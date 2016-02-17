@@ -78,9 +78,14 @@ handle(State, whoami) ->
     {reply, State#client_state.nick, State};
 
 %% Change nick
-handle(St, {nick, Nick}) ->
-    % {reply, ok, St} ;
-    {reply, {error, not_implemented, "Not implemented"}, St} ;
+handle(State, {nick, Nick}) ->
+    {Data, NewState} = case State#client_state.server of
+        undefined ->
+            {ok, State#client_state{nick = Nick}};
+        _ ->
+            {{error, user_already_connected, "Can't change nick when connected to a server"}, State}
+    end,
+    {reply, Data, NewState};
 
 %% Incoming message
 handle(St = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Msg}) ->
