@@ -34,7 +34,7 @@ handle(State, {connect, NewPid, NewNick}) ->
     end;
 
 handle(State, {disconnect, Pid}) ->
-    case get_user(State, Pid) ->
+    case get_user(State, Pid) of
         undefined ->
             {reply, {error, user_not_connected}, State};
         {_Nick, [_H | _T]} ->
@@ -45,6 +45,17 @@ handle(State, {disconnect, Pid}) ->
             {reply, ok, NewState}
     end;
 
+handle(State, {join, Channel, Pid}) ->
+    {Nick, Channels} = get_user(State, Pid),
+    {Data, NewState} = case lists:member(Channel, Channels) of
+        false ->
+            NewUsers = [{Pid, {Nick, [Channel | Channels]}} | proplists:delete(Pid, State#server_state.users)],
+            {ok, State#server_state{ users = NewUsers}};
+        true ->
+            {{error, user_already_joined}, State}
+    end,
+
+    {reply, Data, NewState};
 
 handle(St, Request) ->
     io:fwrite("Server received: ~p~n", [Request]),
@@ -54,4 +65,4 @@ handle(St, Request) ->
 
 % Returns the user with the given Pid, or `undefined` if user is not connected
 get_user(State, Pid) ->
-    proplists:get_value(Pid, State#server_state.users) of 
+    proplists:get_value(Pid, State#server_state.users).
