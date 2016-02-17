@@ -27,8 +27,8 @@ handle(St, {connect, Server}) ->
             {reply, ok, NewSt};
         {error, user_already_connected, Text} ->
             {reply, {error, user_already_connected, Text}, St};
-        {'EXIT', Reason} ->
-            {reply, {error, server_not_reached, Reason}, St}
+        {'EXIT', _} ->
+            {reply, {error, server_not_reached, "Server not reached"}, St}
     end;
 
 %% Disconnect from server
