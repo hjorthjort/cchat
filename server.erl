@@ -57,6 +57,19 @@ handle(State, {join, Channel, Pid}) ->
     end,
     {reply, Data, NewState};
 
+handle(State, {leave, Channel, Pid}) ->
+    {Nick, CurrentChannels} = get_user(State, Pid),
+    case lists:member(Channel, CurrentChannels) of
+        true ->
+            TmpList = proplists:delete(Pid, State#server_state.users),
+            NewUsers = [ {Pid, {Nick, lists:delete(Channel, CurrentChannels)}} | TmpList],
+            NewState = State#server_state{ users = NewUsers },
+            {reply, ok, NewState};
+        false ->
+            {reply, {error, user_not_joined}, State}
+    end;
+        
+
 handle(St, Request) ->
     io:fwrite("Server received: ~p~n", [Request]),
     Response = "hi! You failed at pattern matching!",
