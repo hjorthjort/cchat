@@ -49,12 +49,12 @@ handle(State, {join, Channel, Pid}) ->
     {Nick, Channels} = get_user(State, Pid),
     {Data, NewState} = case lists:member(Channel, Channels) of
         false ->
-            NewUsers = [{Pid, {Nick, [Channel | Channels]}} | proplists:delete(Pid, State#server_state.users)],
-            {ok, State#server_state{ users = NewUsers}};
+            UpdatedChannels = [Channel | Channels],
+            NewUser = {Pid, {Nick, UpdatedChannels}},
+            {ok, update_user(State, NewUser)};
         true ->
             {{error, user_already_joined}, State}
     end,
-
     {reply, Data, NewState};
 
 handle(St, Request) ->
@@ -66,3 +66,8 @@ handle(St, Request) ->
 % Returns the user with the given Pid, or `undefined` if user is not connected
 get_user(State, Pid) ->
     proplists:get_value(Pid, State#server_state.users).
+
+% Updates a single user and returns the new server state
+update_user(State, User) ->
+    {Pid, _} = User,
+    State#server_state{ users = [User | proplists:delete(Pid, State#server_state.users)]}.
