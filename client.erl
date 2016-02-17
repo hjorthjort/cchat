@@ -54,9 +54,14 @@ handle(State, {join, Channel}) ->
     {reply, Data, NewState};
 
 %% Leave channel
-handle(St, {leave, Channel}) ->
-    % {reply, ok, St} ;
-    {reply, {error, not_implemented, "Not implemented"}, St} ;
+handle(State, {leave, Channel}) ->
+    {Data, NewState} = case catch genserver:request(State#client_state.server, { leave, Channel, self() }) of
+        ok ->
+            {ok, State};
+        {error, user_not_joined} ->
+            {{error, user_not_joined, "Not in channel"}, State}
+    end,
+    {reply, Data, NewState};
 
 % Sending messages
 handle(St, {msg_from_GUI, Channel, Msg}) ->
