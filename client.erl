@@ -74,9 +74,8 @@ handle(State, {msg_from_GUI, Channel, Message}) ->
     {reply, Data, NewState};
 
 %% Get current nick
-handle(St, whoami) ->
-    % {reply, "nick", St} ;
-    {reply, {error, not_implemented, "Not implemented"}, St} ;
+handle(State, whoami) ->
+    {reply, State#client_state.nick, State};
 
 %% Change nick
 handle(St, {nick, Nick}) ->
