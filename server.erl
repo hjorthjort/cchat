@@ -19,7 +19,7 @@ initial_state(ServerName) ->
 %% and NewState is the new state of the server.
 
 handle(State, {connect, NewPid, NewNick}) ->
-    PossibleCollisons = [ {Pid, Nick} || {Pid, Nick, _} <- State#server_state.users, Pid == NewPid orelse Nick == NewNick],
+    PossibleCollisons = [ {Pid, Nick} || {Pid, {Nick, _}} <- State#server_state.users, Pid == NewPid orelse Nick == NewNick],
     case PossibleCollisons of
         % No collissions means we add the user to our list and reply with ok
         [] ->
