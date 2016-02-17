@@ -25,7 +25,7 @@ handle(State, {connect, Server}) ->
         ok ->
             {ok, State#client_state{server = ServerAtom}};
         {error, user_already_connected} ->
-            {{error, user_already_connected, "User already connected"}, State};
+            {{error, user_already_connected, "Already connected to server"}, State};
         {'EXIT', _} ->
             {{error, server_not_reached, "Server not reached"}, State}
     end,
