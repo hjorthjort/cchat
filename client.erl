@@ -88,6 +88,6 @@ handle(State, {nick, Nick}) ->
     {reply, Data, NewState};
 
 %% Incoming message
-handle(St = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Msg}) ->
-    gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name++"> "++Msg}),
-    {reply, ok, St}.
+handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Message}) ->
+    gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
+    {reply, ok, State}.
