@@ -64,9 +64,14 @@ handle(State, {leave, Channel}) ->
     {reply, Data, NewState};
 
 % Sending messages
-handle(St, {msg_from_GUI, Channel, Msg}) ->
-    % {reply, ok, St} ;
-    {reply, {error, not_implemented, "Not implemented"}, St} ;
+handle(State, {msg_from_GUI, Channel, Message}) ->
+    {Data, NewState} = case catch genserver:request(State#client_state.server, { send_message, Channel, Message, self() }) of
+        ok ->
+            {ok, State};
+        {error, user_not_joined} ->
+            {{error, user_not_joined, "Not in channel"}, State}
+    end,
+    {reply, Data, NewState};
 
 %% Get current nick
 handle(St, whoami) ->
