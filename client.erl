@@ -44,9 +44,14 @@ handle(State, disconnect) ->
     {reply, Data, NewState};
 
 % Join channel
-handle(St, {join, Channel}) ->
-    % {reply, ok, St} ;
-    {reply, {error, not_implemented, "Not implemented"}, St} ;
+handle(State, {join, Channel}) ->
+    {Data, NewState} = case catch genserver:request(State#client_state.server, { join, Channel, self() }) of
+        ok ->
+            {ok, State};
+        {error, user_already_joined} ->
+            {{error, user_already_joined, "Channel already joined"}, State}
+    end,
+    {reply, Data, NewState};
 
 %% Leave channel
 handle(St, {leave, Channel}) ->
