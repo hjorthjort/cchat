@@ -7,7 +7,7 @@
 
 %% Produce initial state
 initial_state(Nick, GUIName) ->
-    #client_st { nick = Nick, gui = GUIName }.
+    #client_state { nick = Nick, gui = GUIName }.
 
 %% ---------------------------------------------------------------------------
 
@@ -19,17 +19,18 @@ initial_state(Nick, GUIName) ->
 %% requesting process and NewState is the new state of the client.
 
 %% Connect to server
-handle(St, {connect, Server}) ->
+handle(State, {connect, Server}) ->
+    io:fwrite("Client received: ~p~n", [{connect, Server}]),
     ServerAtom = list_to_atom(Server),
-    case catch genserver:request(ServerAtom, { connect, self(), St#client_st.nick }) of
+    {Data, NewState} = case catch genserver:request(ServerAtom, { connect, self(), State#client_state.nick }) of
         ok ->
-            NewSt = St#client_st{server = ServerAtom},
-            {reply, ok, NewSt};
-        {error, user_already_connected, Text} ->
-            {reply, {error, user_already_connected, Text}, St};
+            {ok, State#client_state{server = ServerAtom}};
+        {error, user_already_connected} ->
+            {{error, user_already_connected, "User already connected"}, State};
         {'EXIT', _} ->
-            {reply, {error, server_not_reached, "Server not reached"}, St}
-    end;
+            {{error, server_not_reached, "Server not reached"}, State}
+    end,
+    {reply, Data, NewState};
 
 %% Disconnect from server
 handle(St, disconnect) ->
@@ -62,6 +63,6 @@ handle(St, {nick, Nick}) ->
     {reply, {error, not_implemented, "Not implemented"}, St} ;
 
 %% Incoming message
-handle(St = #client_st { gui = GUIName }, {incoming_msg, Channel, Name, Msg}) ->
+handle(St = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Msg}) ->
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name++"> "++Msg}),
     {reply, ok, St}.
