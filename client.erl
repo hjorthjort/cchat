@@ -38,6 +38,8 @@ handle(State, disconnect) ->
             {ok, State#client_state{server = undefined}};
         {error, user_not_connected} ->
             {{error, user_not_connected, "Not connected to server"}, State};
+        {error, leave_channels_first} ->
+            {{error, leave_channels_first, "Leave channels before disconnecting"}, State};
         {'EXIT', _} ->
             {{error, server_not_reached, "Server not reached"}, State}
     end,
