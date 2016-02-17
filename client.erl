@@ -29,8 +29,8 @@ handle(St, {connect, Server}) ->
             {reply, {error, user_already_connected, Text}, St};
         {'EXIT', "Timeout"} ->
             {reply, {error, server_not_reached, "Timeout"}, St};
-        X ->
-            io:fwrite("~p~n", [X])
+        _ ->
+            {reply, {error, unknown_response, "Unknown response from server"}, St}
     end;
 
 %% Disconnect from server
