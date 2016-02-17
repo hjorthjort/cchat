@@ -32,9 +32,16 @@ handle(State, {connect, Server}) ->
     {reply, Data, NewState};
 
 %% Disconnect from server
-handle(St, disconnect) ->
-    % {reply, ok, St} ;
-    {reply, {error, not_implemented, "Not implemented"}, St} ;
+handle(State, disconnect) ->
+    {Data, NewState} = case catch genserver:request(State#client_state.server, { disconnect, self() }) of
+        ok ->
+            {ok, State#client_state{server = undefined}};
+        {error, user_not_connected} ->
+            {{error, user_not_connected, "Not connected to server"}, State};
+        {'EXIT', _} ->
+            {{error, server_not_reached, "Server not reached"}, State}
+    end,
+    {reply, Data, NewState};
 
 % Join channel
 handle(St, {join, Channel}) ->
