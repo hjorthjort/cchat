@@ -34,7 +34,7 @@ handle(State, {connect, NewPid, NewNick}) ->
     end;
 
 handle(State, {disconnect, Pid}) ->
-    case proplists:get_value(Pid, State#server_state.users) of 
+    case get_user(State, Pid) ->
         undefined ->
             {reply, {error, user_not_connected}, State};
         {_Nick, [_H | _T]} ->
@@ -52,3 +52,6 @@ handle(St, Request) ->
     io:fwrite("Server is sending: ~p~n", [Response]),
     {reply, Response, St}.
 
+% Returns the user with the given Pid, or `undefined` if user is not connected
+get_user(State, Pid) ->
+    proplists:get_value(Pid, State#server_state.users) of 
