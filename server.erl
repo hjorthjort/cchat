@@ -18,8 +18,14 @@ initial_state(ServerName) ->
 %% {reply, Reply, NewState}, where Reply is the reply to be sent to the client
 %% and NewState is the new state of the server.
 
+handle(State, {connect, Pid, Nick}) ->
+    CurrentUsers = State#server_state.users,
+    NewState = State#server_state{users = [ {Pid, Nick, []} | CurrentUsers ]},
+    io:fwrite("Users: ~p~n", [NewState#server_state.users]),
+    {reply, ok, NewState};
+
 handle(St, Request) ->
     io:fwrite("Server received: ~p~n", [Request]),
-    Response = "hi!",
+    Response = "hi! You failed at pattern matching!",
     io:fwrite("Server is sending: ~p~n", [Response]),
     {reply, Response, St}.
