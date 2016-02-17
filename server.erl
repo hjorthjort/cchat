@@ -24,7 +24,7 @@ handle(State, {connect, NewPid, NewNick}) ->
         % No collissions means we add the user to our list and reply with ok
         [] ->
             CurrentUsers = State#server_state.users,
-            NewState = State#server_state{users = [ {NewPid, NewNick, []} |
+            NewState = State#server_state{users = [ {NewPid, {NewNick, []}} |
                                                     CurrentUsers ]},
             io:fwrite("Users: ~p~n", [NewState#server_state.users]),
             {reply, ok, NewState};
@@ -33,8 +33,22 @@ handle(State, {connect, NewPid, NewNick}) ->
             {reply, {error, user_already_connected}, State}
     end;
 
+handle(State, {disconnect, Pid}) ->
+    case proplists:get_value(Pid, State#server_state.users) of 
+        undefined ->
+            {reply, {error, user_not_connected}, State};
+        {_Nick, [_H | _T]} ->
+            {reply, {error, leave_channels_first}, State};
+        {_Nick, []} ->
+            CurrentUsers = State#server_state.users,
+            NewState = State#server_state{ users = proplists:delete(Pid, CurrentUsers)},
+            {reply, ok, NewState}
+    end;
+
+
 handle(St, Request) ->
     io:fwrite("Server received: ~p~n", [Request]),
     Response = "hi! You failed at pattern matching!",
     io:fwrite("Server is sending: ~p~n", [Response]),
     {reply, Response, St}.
+
