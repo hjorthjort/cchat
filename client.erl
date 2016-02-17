@@ -20,7 +20,6 @@ initial_state(Nick, GUIName) ->
 
 %% Connect to server
 handle(State, {connect, Server}) ->
-    io:fwrite("Client received: ~p~n", [{connect, Server}]),
     ServerAtom = list_to_atom(Server),
     {Data, NewState} = case catch genserver:request(ServerAtom, { connect, self(), State#client_state.nick }) of
         ok ->
