@@ -27,10 +27,8 @@ handle(St, {connect, Server}) ->
             {reply, ok, NewSt};
         {error, user_already_connected, Text} ->
             {reply, {error, user_already_connected, Text}, St};
-        {'EXIT', "Timeout"} ->
-            {reply, {error, server_not_reached, "Timeout"}, St};
-        _ ->
-            {reply, {error, unknown_response, "Unknown response from server"}, St}
+        {'EXIT', Reason} ->
+            {reply, {error, server_not_reached, Reason}, St}
     end;
 
 %% Disconnect from server
