@@ -75,11 +75,11 @@ request(Server, Request, OldState, NewState) ->
         % Otherwise we send the request
         _ ->
             case catch genserver:request(Server, Request) of
-                % If the server respons with ok we send back the new state
+                % If the server responds with `ok` we return the new state
                 ok ->
                     io:fwrite("~p: Response ok~n", [OldState#client_state.nick]),
                     {ok, NewState};
-                % If the server responds with an error we leave the state unchanged and send back the error
+                % If the server responds with an error we leave the state unchanged and return the error
                 {error, user_already_connected} ->
                     io:fwrite("~p: User already connected~n", [OldState#client_state.nick]),
                     {{error, user_already_connected, "Already connected to server"}, OldState};
