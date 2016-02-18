@@ -79,7 +79,8 @@ handle(State, {send_message, Channel, Message, Sender}) ->
             {reply, {error, user_not_joined}, State};
         true ->
             [ genserver:request(Pid, {incoming_msg, Channel, Nick, Message }) || 
-                {Pid, {_, Channels}} <- State#server_state.users, lists:member(Channel, Channels) ],
+                {Pid, {_, Channels}} <- State#server_state.users, lists:member(Channel, Channels),
+                Pid /= Sender],
             {reply, ok, State}
     end;
         
