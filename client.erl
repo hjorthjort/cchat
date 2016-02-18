@@ -21,67 +21,23 @@ initial_state(Nick, GUIName) ->
 %% Connect to server
 handle(State, {connect, Server}) ->
     ServerAtom = list_to_atom(Server),
-    {Data, NewState} = case catch genserver:request(ServerAtom, { connect, self(), State#client_state.nick }) of
-        ok ->
-            {ok, State#client_state{server = ServerAtom}};
-        {error, user_already_connected} ->
-            {{error, user_already_connected, "Already connected to server"}, State};
-        {'EXIT', _} ->
-            {{error, server_not_reached, "Server not reached"}, State}
-    end,
-    {reply, Data, NewState};
+    request(ServerAtom, {connect, self(), State#client_state.nick}, State, State#client_state{server = ServerAtom});
 
 %% Disconnect from server
 handle(State, disconnect) ->
-    % Check the state of the server to see if the client is connected to a server
-    {Data, NewState} = case State#client_state.server of
-        % If server is undefined the user is not connected and we respond with and error
-        undefined ->
-            {{error, user_not_connected, "Not connected to server"}, State};
-        % Otherwise we try to disconnect from the server
-        Server ->
-            case catch genserver:request(Server, { disconnect, self() }) of
-                ok ->
-                    {ok, State#client_state{server = undefined}};
-                {error, user_not_connected} ->
-                    {{error, user_not_connected, "Not connected to server"}, State};
-                {error, leave_channels_first} ->
-                    {{error, leave_channels_first, "Leave channels before disconnecting"}, State};
-                {'EXIT', _Reason} ->
-                    {{error, server_not_reached, "Server not reached"}, State}
-            end
-    end,
-    {reply, Data, NewState};
+    request(State#client_state.server, {disconnect, self()}, State, State#client_state{server = undefined});
 
 % Join channel
 handle(State, {join, Channel}) ->
-    {Data, NewState} = case catch genserver:request(State#client_state.server, { join, Channel, self() }) of
-        ok ->
-            {ok, State};
-        {error, user_already_joined} ->
-            {{error, user_already_joined, "Channel already joined"}, State}
-    end,
-    {reply, Data, NewState};
+    request(State#client_state.server, {join, Channel, self()}, State, State);
 
 %% Leave channel
 handle(State, {leave, Channel}) ->
-    {Data, NewState} = case catch genserver:request(State#client_state.server, { leave, Channel, self() }) of
-        ok ->
-            {ok, State};
-        {error, user_not_joined} ->
-            {{error, user_not_joined, "Not in channel"}, State}
-    end,
-    {reply, Data, NewState};
+    request(State#client_state.server, {leave, Channel, self()}, State, State);
 
 % Sending messages
 handle(State, {msg_from_GUI, Channel, Message}) ->
-    {Data, NewState} = case catch genserver:request(State#client_state.server, { send_message, Channel, Message, self() }) of
-        ok ->
-            {ok, State};
-        {error, user_not_joined} ->
-            {{error, user_not_joined, "Not in channel"}, State}
-    end,
-    {reply, Data, NewState};
+    request(State#client_state.server, {send_message, Channel, Message, self()}, State, State);
 
 %% Get current nick
 handle(State, whoami) ->
@@ -101,3 +57,33 @@ handle(State, {nick, Nick}) ->
 handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Message}) ->
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
     {reply, ok, State}.
+
+request(Server, Request, OldState, NewState) ->
+    % Check the state of the server to see if the client is connected
+    {Data, State} = case Server of
+        % If server is undefined the user is not connected and we respond with an error
+        undefined ->
+            {{error, user_not_connected, "Not connected to server"}, OldState};
+        % Otherwise we send the request
+        _ ->
+            case catch genserver:request(Server, Request) of
+                % If the server respons with ok we send back the new state
+                ok ->
+                    {ok, NewState};
+                % If the server responds with an error we leave the state unchanged and send back the error
+                {error, user_already_connected} ->
+                    {{error, user_already_connected, "Already connected to server"}, OldState};
+                {error, user_not_connected} ->
+                    {{error, user_not_connected, "Not connected to server"}, OldState};
+                {error, leave_channels_first} ->
+                    {{error, leave_channels_first, "Leave channels before disconnecting"}, OldState};
+                {error, user_already_joined} ->
+                    {{error, user_already_joined, "Channel already joined"}, OldState};
+                {error, user_not_joined} ->
+                    {{error, user_not_joined, "Not in channel"}, OldState};
+                % If the request exits in any way the server could not be reached
+                {'EXIT', _} ->
+                    {{error, server_not_reached, "Server not reached"}, OldState}
+            end
+    end,
+    {reply, Data, State}.
