@@ -32,16 +32,22 @@ handle(State, {connect, NewPid, NewNick}) ->
     end;
 
 handle(State, {disconnect, Pid}) ->
-    case get_user(State, Pid) of
+    io:fwrite("in disconnect~n", []),
+    case catch(get_user(State, Pid)) of
         undefined ->
             {reply, {error, user_not_connected}, State};
-        {_Nick, [_H | _T]} ->
+        %User is connected to chat channels
+        #user{channels=[_H | _T]} ->
             {reply, {error, leave_channels_first}, State};
-        {_Nick, []} ->
+        %User is not connected to any channels
+        #user{channels=[]} ->
             CurrentUsers = State#server_state.users,
-            NewState = State#server_state{ users = proplists:delete(Pid, CurrentUsers)},
+            NewState = State#server_state{ users = [User || 
+                    User <- State#server_state.users, User#user.pid /= Pid]},
             io:fwrite("Users: ~p~n", [NewState#server_state.users]),
-            {reply, ok, NewState}
+            {reply, ok, NewState};
+        X ->
+            io:fwrite("~p~n", [X])
     end;
 
 handle(State, {join, Channel, Pid}) ->
@@ -90,8 +96,15 @@ handle(St, Request) ->
     {reply, Response, St}.
 
 % Returns the user with the given Pid, or `undefined` if user is not connected
-get_user(State, Pid) ->
-    proplists:get_value(Pid, State#server_state.users).
+get_user( State, Pid) ->
+    case [ User || User <- State#server_state.users, User#user.pid == Pid ] of
+        [] ->
+            undefined;
+        [Head] ->
+            Head;
+        List ->
+            List
+    end.
 
 % Updates a single user and returns the new server state
 update_user(State, User) ->
