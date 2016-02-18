@@ -73,7 +73,7 @@ handle(State, {leave, Channel, Pid}) ->
     end;
 
 handle(State, {send_message, Channel, Message, Sender}) ->
-    {Nick, ConnectedChannels} = proplists:getValue(Sender),
+    {Nick, ConnectedChannels} = proplists:get_value(Sender, State#server_state.users),
     case lists:member(Channel, ConnectedChannels) of
         false ->
             {reply, {error, user_not_joined}, State};
