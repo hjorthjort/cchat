@@ -3,6 +3,9 @@
 * When we try to connect to server when username is taken, should we reply with
   `already_connected` or something else?
 * It says that chat rooms should live forever. Is this a must?
+
+Answer: Use more concurrency! Chat rooms are not dependent on each other, so they should not have to wait for each other. Make every room a process and let that process send messages to all its clients.
+
 * Should the server implement any security? Like making sure that the client
   asking to post for a certain PID is actually that client (so that a client
   doesn't send in) someone else's PID.
