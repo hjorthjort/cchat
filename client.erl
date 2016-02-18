@@ -33,15 +33,23 @@ handle(State, {connect, Server}) ->
 
 %% Disconnect from server
 handle(State, disconnect) ->
-    {Data, NewState} = case catch genserver:request(State#client_state.server, { disconnect, self() }) of
-        ok ->
-            {ok, State#client_state{server = undefined}};
-        {error, user_not_connected} ->
+    % Check the state of the server to see if the client is connected to a server
+    {Data, NewState} = case State#client_state.server of
+        % If server is undefined the user is not connected and we respond with and error
+        undefined ->
             {{error, user_not_connected, "Not connected to server"}, State};
-        {error, leave_channels_first} ->
-            {{error, leave_channels_first, "Leave channels before disconnecting"}, State};
-        {'EXIT', _} ->
-            {{error, server_not_reached, "Server not reached"}, State}
+        % Otherwise we try to disconnect from the server
+        Server ->
+            case catch genserver:request(Server, { disconnect, self() }) of
+                ok ->
+                    {ok, State#client_state{server = undefined}};
+                {error, user_not_connected} ->
+                    {{error, user_not_connected, "Not connected to server"}, State};
+                {error, leave_channels_first} ->
+                    {{error, leave_channels_first, "Leave channels before disconnecting"}, State};
+                {'EXIT', _Reason} ->
+                    {{error, server_not_reached, "Server not reached"}, State}
+            end
     end,
     {reply, Data, NewState};
 
