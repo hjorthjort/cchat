@@ -71,6 +71,17 @@ handle(State, {leave, Channel, Pid}) ->
         false ->
             {reply, {error, user_not_joined}, State}
     end;
+
+handle(State, {send_message, Channel, Message, Sender}) ->
+    {Nick, ConnectedChannels} = proplists:getValue(Sender),
+    case lists:member(Channel, ConnectedChannels) of
+        false ->
+            {reply, {error, user_not_joined}, State};
+        true ->
+            [ genserver:request(Pid, {incoming_msg, Channel, Nick, Message }) || 
+                {Pid, {_, Channels}} <- State#server_state.users, lists:member(Channel, Channels) ],
+            {reply, ok, State}
+    end;
         
 
 handle(St, Request) ->
