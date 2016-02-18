@@ -62,6 +62,9 @@ handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Me
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
     {reply, ok, State}.
 
+%% request/4 sends a request to a specified PID (Server). If the response from
+%% the server is `ok` this function returns {reply, ok, NewState}. If the
+%% response is an error it returns {reply, {error, atom, Message}, OldState}.
 request(Server, Request, OldState, NewState) ->
     io:fwrite("~p: Sending request ~p~n", [OldState#client_state.nick, Request]),
     % Check the state of the server to see if the client is connected
