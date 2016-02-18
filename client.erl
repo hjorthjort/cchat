@@ -2,14 +2,11 @@
 -export([handle/2, initial_state/2]).
 -include_lib("./defs.hrl").
 
-%% inititial_state/2 and handle/2 are used togetger with the genserver module,
-%% explained in the lecture about Generic server.
-
 %% Produce initial state
 initial_state(Nick, GUIName) ->
     #client_state { nick = Nick, gui = GUIName }.
 
-%% ---------------------------------------------------------------------------
+%% -----------------------------------------------------------------------------
 
 %% handle/2 handles each kind of request from GUI
 
@@ -61,6 +58,8 @@ handle(State, {nick, Nick}) ->
 handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Message}) ->
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
     {reply, ok, State}.
+
+%% -----------------------------------------------------------------------------
 
 %% request/4 sends a request to a specified PID (Server). If the response from
 %% the server is `ok` this function returns {reply, ok, NewState}. If the
