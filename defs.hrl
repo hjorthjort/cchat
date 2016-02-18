@@ -1,9 +1,19 @@
 % This record defines the structure of the client process.
 % Add whatever other fields you need.
 % It contains the following fields:
+%   nick: the chosen nickname for the client
 %   gui: the name (or Pid) of the GUI process.
+%   server: the server which the client is currently connected to
 -record(client_state, { nick, gui, server }).
 
 % This record defines the structure of the server process.
 % Add whatever other fields you need.
+%   users: user records of all users on the server
 -record(server_state, { users=[] }).
+
+% This record defines a user on the server side.
+% It contains the following fields:
+%   pid: the pid (or name) of the user process
+%   nick: the user's nickname used for messages
+%   channels: the channels the user is connected to
+-record(user, { pid, nick, channels=[] }).
