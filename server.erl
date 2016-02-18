@@ -19,14 +19,12 @@ initial_state(ServerName) ->
 %% and NewState is the new state of the server.
 
 handle(State, {connect, NewPid, NewNick}) ->
-    PossibleCollisons = [ {Pid, Nick} || {Pid, {Nick, _}} <- State#server_state.users, Pid == NewPid orelse Nick == NewNick],
+    PossibleCollisons = [ collision || #user{ pid=Pid, nick=Nick } <- State#server_state.users, Pid == NewPid orelse Nick == NewNick],
     case PossibleCollisons of
         % No collissions means we add the user to our list and reply with ok
         [] ->
-            CurrentUsers = State#server_state.users,
-            NewState = State#server_state{users = [ {NewPid, {NewNick, []}} |
-                                                    CurrentUsers ]},
-            io:fwrite("Users: ~p~n", [NewState#server_state.users]),
+            NewState = State#server_state{users = [ #user{ pid=NewPid, nick=NewNick} |
+                                                    State#server_state.users ]},
             {reply, ok, NewState};
         % If we get a collission we reply with an error and unchanged state
         [_H | _T] ->
