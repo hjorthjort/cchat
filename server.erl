@@ -42,6 +42,7 @@ handle(State, {disconnect, Pid}) ->
         {_Nick, []} ->
             CurrentUsers = State#server_state.users,
             NewState = State#server_state{ users = proplists:delete(Pid, CurrentUsers)},
+            io:fwrite("Users: ~p~n", [NewState#server_state.users]),
             {reply, ok, NewState}
     end;
 
@@ -55,7 +56,22 @@ handle(State, {join, Channel, Pid}) ->
         true ->
             {{error, user_already_joined}, State}
     end,
+    io:fwrite("Users: ~p~n", [NewState#server_state.users]),
     {reply, Data, NewState};
+
+handle(State, {leave, Channel, Pid}) ->
+    {Nick, CurrentChannels} = get_user(State, Pid),
+    case lists:member(Channel, CurrentChannels) of
+        true ->
+            TmpList = proplists:delete(Pid, State#server_state.users),
+            NewUsers = [ {Pid, {Nick, lists:delete(Channel, CurrentChannels)}} | TmpList],
+            NewState = State#server_state{ users = NewUsers },
+            io:fwrite("Users: ~p~n", [NewState#server_state.users]),
+            {reply, ok, NewState};
+        false ->
+            {reply, {error, user_not_joined}, State}
+    end;
+        
 
 handle(St, Request) ->
     io:fwrite("Server received: ~p~n", [Request]),
