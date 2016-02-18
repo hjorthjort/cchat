@@ -59,30 +59,39 @@ handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Me
     {reply, ok, State}.
 
 request(Server, Request, OldState, NewState) ->
+    io:fwrite("Client: Sending request ~p~n", [Request]),
     % Check the state of the server to see if the client is connected
     {Data, State} = case Server of
         % If server is undefined the user is not connected and we respond with an error
         undefined ->
+            io:fwrite("Client: Server undefined~n"),
             {{error, user_not_connected, "Not connected to server"}, OldState};
         % Otherwise we send the request
         _ ->
             case catch genserver:request(Server, Request) of
                 % If the server respons with ok we send back the new state
                 ok ->
+                    io:fwrite("Client: Response ok~n"),
                     {ok, NewState};
                 % If the server responds with an error we leave the state unchanged and send back the error
                 {error, user_already_connected} ->
+                    io:fwrite("Client: User already connected~n"),
                     {{error, user_already_connected, "Already connected to server"}, OldState};
                 {error, user_not_connected} ->
+                    io:fwrite("Client: User not connected~n"),
                     {{error, user_not_connected, "Not connected to server"}, OldState};
                 {error, leave_channels_first} ->
+                    io:fwrite("Client: Leave channels first~n"),
                     {{error, leave_channels_first, "Leave channels before disconnecting"}, OldState};
                 {error, user_already_joined} ->
+                    io:fwrite("Client: User already joined~n"),
                     {{error, user_already_joined, "Channel already joined"}, OldState};
                 {error, user_not_joined} ->
+                    io:fwrite("Client: User not joined~n"),
                     {{error, user_not_joined, "Not in channel"}, OldState};
                 % If the request exits in any way the server could not be reached
-                {'EXIT', _} ->
+                {'EXIT', _Reason} ->
+                    io:fwrite("Client: EXIT reason ~p~n", [_Reason]),
                     {{error, server_not_reached, "Server not reached"}, OldState}
             end
     end,
