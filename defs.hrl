@@ -10,7 +10,7 @@
 % Add whatever other fields you need.
 %   users: user records of all users on the server
 %   channels: channel records of all channels on the server
--record(server_state, { users=[], channels=[] }).
+-record(server_state, { name, users=[], channels=[] }).
 
 % This record defines a user on the server side.
 % It contains the following fields:
