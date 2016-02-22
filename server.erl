@@ -67,25 +67,6 @@ handle(State, {join, ChannelName, ClientPid}) ->
             {reply, {error, user_already_joined}, NewState}
     end;
 
-    % % Does channel exist?
-    % case get_channel(State, ChannelName) of
-    %     % No, create channel
-    %     undefined ->
-    %         NewState = create_channel(State, ChannelName, ClientPid),
-    %         {reply, ok, NewState};
-    %     Channel ->
-    %         % Is user in channel?
-    %         case is_user_in_channel(Channel, ClientPid) of
-    %             % No, add user to the channel
-    %             false ->
-    %                 NewState = add_user_to_channel(State, Channel, ClientPid),
-    %                 {reply, ok, NewState};
-    %             % Yes, throw error
-    %             true ->
-    %                 {reply, {error, user_already_joined}, State}
-    %         end
-    % end.
-
 handle(State, {leave, Channel, Pid}) ->
     User = get_user(State, Pid),
     ChannelName =list_to_atom(State#server_state.name ++ Channel),
@@ -128,37 +109,6 @@ get_user( State, Pid) ->
         [Head] ->
             Head
     end.
-
-% Updates a single user and returns the new server state
-update_user(State, User) ->
-    {Pid, _} = User,
-    State#server_state{ users = [User | proplists:delete(Pid, State#server_state.users)]}.
-
-% Returns the channel with the given name, or `undefined` if the channel doesn't exist
-get_channel(State, ChannelName) ->
-    case lists:filter(fun(Channel) -> Channel#channel.name =:= ChannelName end, State#server_state.channels) of
-        % No matches, channel doesn't exist
-        [] ->
-            undefined;
-        % One match, return channel
-        [H] ->
-            H
-    end.
-
-is_user_in_channel(Channel, ClientPid) ->
-    case lists:filter(fun(User) -> User#user.pid =:= ClientPid end, Channel#channel.users) of
-        % No matches, user is not in channel
-        [] ->
-            false;
-        % One match, user is in channel
-        [_H] ->
-            true
-    end.
-
-add_user_to_channel(State, Channel, ClientPid) ->
-    FilteredChannels = lists:filter(fun(C) -> C /= Channel end, State#server_state.channels),
-    NewChannel = Channel#channel{users = [ClientPid | Channel#channel.users]},
-    State#server_state{channels = [NewChannel | FilteredChannels]}.
 
 create_channel(State, Channel) ->
     genserver:start(Channel, channel:initial_state(Channel), fun channel:handle/2),
