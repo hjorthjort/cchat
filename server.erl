@@ -59,26 +59,26 @@ handle(State, {join, ChannelName, ClientPid}) ->
             {reply, ok, NewState};
         {error, user_already_joined} ->
             {reply, {error, user_already_joined}, NewState}
-    end.
+    end;
 
-    % Does channel exist?
-    case get_channel(State, ChannelName) of
-        % No, create channel
-        undefined ->
-            NewState = create_channel(State, ChannelName, ClientPid),
-            {reply, ok, NewState};
-        Channel ->
-            % Is user in channel?
-            case is_user_in_channel(Channel, ClientPid) of
-                % No, add user to the channel
-                false ->
-                    NewState = add_user_to_channel(State, Channel, ClientPid),
-                    {reply, ok, NewState};
-                % Yes, throw error
-                true ->
-                    {reply, {error, user_already_joined}, State}
-            end
-    end.
+    % % Does channel exist?
+    % case get_channel(State, ChannelName) of
+    %     % No, create channel
+    %     undefined ->
+    %         NewState = create_channel(State, ChannelName, ClientPid),
+    %         {reply, ok, NewState};
+    %     Channel ->
+    %         % Is user in channel?
+    %         case is_user_in_channel(Channel, ClientPid) of
+    %             % No, add user to the channel
+    %             false ->
+    %                 NewState = add_user_to_channel(State, Channel, ClientPid),
+    %                 {reply, ok, NewState};
+    %             % Yes, throw error
+    %             true ->
+    %                 {reply, {error, user_already_joined}, State}
+    %         end
+    % end.
 
 handle(State, {leave, Channel, Pid}) ->
     {Nick, CurrentChannels} = get_user(State, Pid),
