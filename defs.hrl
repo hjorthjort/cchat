@@ -21,7 +21,5 @@
 
 % This record defines a channel on the server side.
 % It contains the following fields:
-%   name: the name of the channel as an atom
-%   pid: the pid for this channel
-%   users: a list of pids for all the users currently in the channel
--record(channel, { name, pid, users=[] }).
+%   users: a list of user records for all the users currently in the channel
+-record(channel_state, { name, users=[] }).
