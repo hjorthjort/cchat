@@ -41,7 +41,6 @@ handle(State, {disconnect, Pid}) ->
             {reply, {error, leave_channels_first}, State};
         %User is not connected to any channels
         #user{channels=[]} ->
-            CurrentUsers = State#server_state.users,
             NewState = State#server_state{ users = [User ||
                     User <- State#server_state.users, User#user.pid /= Pid]},
             io:fwrite("Users: ~p~n", [NewState#server_state.users]),
@@ -92,14 +91,7 @@ handle(State, {send_message, Channel, Message, Sender}) ->
                 {Pid, {_, Channels}} <- State#server_state.users, lists:member(Channel, Channels),
                 Pid /= Sender],
             {reply, ok, State}
-    end;
-
-%TODO: Remove this
-handle(St, Request) ->
-    io:fwrite("Server received: ~p~n", [Request]),
-    Response = "hi! You failed at pattern matching!",
-    io:fwrite("Server is sending: ~p~n", [Response]),
-    {reply, Response, St}.
+    end.
 
 % Returns the user with the given Pid, or `undefined` if user is not connected
 get_user( State, Pid) ->
