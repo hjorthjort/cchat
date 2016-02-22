@@ -58,7 +58,8 @@ handle(State, {join, ChannelName, ClientPid}) ->
             State
     end,
 
-    case genserver:request(Channel, {join, ClientPid}) of
+    User = get_user(State, UserPid),
+    case genserver:request(Channel, {join, User}) of
         ok ->
             {reply, ok, NewState};
         {error, user_already_joined} ->
