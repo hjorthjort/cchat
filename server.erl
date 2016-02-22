@@ -83,6 +83,7 @@ handle(State, {leave, ChannelName, Pid}) ->
 
 handle(State, {send_message, Channel, Message, Sender}) ->
     User = proplists:get_value(Sender, State#server_state.users),
+    io:fwrite("[server] State: ~p~n", [State]),
     case genserver:request(get_channel_atom(State, Channel),
                            {send_message, User, Message}) of 
         {error, user_not_joined} ->

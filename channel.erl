@@ -44,6 +44,7 @@ handle(State, {leave, User}) ->
 %%   Sender: A user record for the sending user
 %%   Message: A string containing the message to send
 handle(State, {send_message, Sender, Message}) ->
+    io:fwrite("[channel] State: ~p~n", [State]),
     case is_user_in_channel(State, Sender) of
         false ->
             {reply, {error, user_not_joined}, State};
