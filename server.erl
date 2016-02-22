@@ -88,7 +88,7 @@ handle(State, {send_message, Channel, Message, Sender}) ->
             {reply, ok, State}
     end;
         
-
+%TODO: Remove this
 handle(St, Request) ->
     io:fwrite("Server received: ~p~n", [Request]),
     Response = "hi! You failed at pattern matching!",
