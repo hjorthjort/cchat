@@ -31,15 +31,18 @@ handle(State, {connect, NewPid, NewNick}) ->
             {reply, {error, user_already_connected}, State}
     end;
 
+%TODO[kepp_track]: Should we keep track of the users channels just to handle this? If so, we need to reimplement it : the logic has been removed.
 handle(State, {disconnect, Pid}) ->
     io:fwrite("in disconnect~n", []),
     case catch(get_user(State, Pid)) of
         undefined ->
             {reply, {error, user_not_connected}, State};
         %User is connected to chat channels
+        %TODO[keep_track]
         #user{channels=[_H | _T]} ->
             {reply, {error, leave_channels_first}, State};
         %User is not connected to any channels
+        %TODO[keep_track]
         #user{channels=[]} ->
             NewState = State#server_state{ users = [User ||
                     User <- State#server_state.users, User#user.pid /= Pid]},
