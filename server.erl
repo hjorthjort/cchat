@@ -49,7 +49,7 @@ handle(State, {disconnect, Pid}) ->
             io:fwrite("~p~n", [X])
     end;
 
-handle(State, {join, ChannelName, ClientPid}) ->
+handle(State, {join, ChannelName, UserPid}) ->
     Channel = get_channel_atom(State, ChannelName),
     NewState = case lists:member(Channel, State#server_state.channels) of
         false ->
@@ -66,8 +66,8 @@ handle(State, {join, ChannelName, ClientPid}) ->
             {reply, {error, user_already_joined}, NewState}
     end;
 
-handle(State, {leave, ChannelName, Pid}) ->
-    User = get_user(State, Pid),
+handle(State, {leave, ChannelName, UserPid}) ->
+    User = get_user(State, UserPid),
     Channel = get_channel_atom(State, ChannelName),
     case lists:member(Channel, State#server_state.channels) of
         true ->
@@ -81,7 +81,7 @@ handle(State, {leave, ChannelName, Pid}) ->
             {reply, {error, user_not_joined}, State}
     end;
 
-handle(State, {send_message, Channel, Message, Sender}) ->
+handle(State, {send_message, Channel, Message, SenderPid}) ->
     User = proplists:get_value(Sender, State#server_state.users),
     io:fwrite("[server] State: ~p~n", [State]),
     case genserver:request(get_channel_atom(State, Channel),
