@@ -110,9 +110,7 @@ get_user( State, Pid) ->
         [] ->
             undefined;
         [Head] ->
-            Head;
-        List ->
-            List
+            Head
     end.
 
 % Updates a single user and returns the new server state
