@@ -64,18 +64,6 @@ handle(State, {join, ChannelName, ClientPid}) ->
             end
     end.
 
-    {Nick, Channels} = get_user(State, Pid),
-    {Data, NewState} = case lists:member(Channel, Channels) of
-        false ->
-            UpdatedChannels = [Channel | Channels],
-            NewUser = {Pid, {Nick, UpdatedChannels}},
-            {ok, update_user(State, NewUser)};
-        true ->
-            {{error, user_already_joined}, State}
-    end,
-    io:fwrite("Users: ~p~n", [NewState#server_state.users]),
-    {reply, Data, NewState};
-
 handle(State, {leave, Channel, Pid}) ->
     {Nick, CurrentChannels} = get_user(State, Pid),
     case lists:member(Channel, CurrentChannels) of
