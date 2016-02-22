@@ -36,15 +36,20 @@ handle(State, {leave, User}) ->
     end;
 
 % Send message
-handle(State, {send_message, FromUser, Message}) ->
-    UsersToSendTo = lists:filter(fun(User) -> User#user.nick =:= FromUser#user.nick end, State#channel_state.users),
-    lists:foreach(fun(ToUser) -> send_message(State, FromUser, ToUser, Message) end, UsersToSendTo),
-    {reply, ok, State}.
+handle(State, {send_message, Sender, Message}) ->
+    case is_user_in_channel(State, Sender) of
+        false ->
+            {reply, {error, user_not_joined}, State};
+        true ->
+            UsersToSendTo = lists:filter(fun(User) -> User#user.nick =:= Sender#user.nick end, State#channel_state.users),
+            lists:foreach(fun(Receiver) -> send_message(State, Sender, Receiver, Message) end, UsersToSendTo),
+            {reply, ok, State}
+    end.
 
 %% -----------------------------------------------------------------------------
 
-send_message(State, FromUser, ToUser, Message) ->
-    genserver:request(ToUser#user.pid, {incoming_msg, State#channel_state.name, FromUser#user.nick, Message}).
+send_message(State, Sender, Receiver, Message) ->
+    genserver:request(Receiver#user.pid, {incoming_msg, State#channel_state.name, Sender#user.nick, Message}).
 
 %% -----------------------------------------------------------------------------
 
