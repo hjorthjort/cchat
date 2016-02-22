@@ -14,3 +14,4 @@
 * When a server sends out a message to everyone in a channel, should the server
   use the clients' genservers? This means that the server has to wait for a
   response from all clients, and this feels like a weird behaviour for a server.
+* Can we spawn a new process for each client when sending a message?
