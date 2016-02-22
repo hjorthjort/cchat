@@ -156,8 +156,8 @@ is_user_in_channel(Channel, ClientPid) ->
     end.
 
 add_user_to_channel(State, Channel, ClientPid) ->
-    FilteredChannels = lists:filter(fun(C) -> C /= Channel, State#server_state.channels),
-    NewChannel = Channel#channel{users = [ClientPid | Channel#channel.users]}},
+    FilteredChannels = lists:filter(fun(C) -> C /= Channel end, State#server_state.channels),
+    NewChannel = Channel#channel{users = [ClientPid | Channel#channel.users]},
     State#server_state{channels = [NewChannel | FilteredChannels]}.
 
 create_channel(State, Channel) ->
