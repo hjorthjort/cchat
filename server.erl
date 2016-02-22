@@ -18,6 +18,12 @@ initial_state(ServerName) ->
 %% {reply, Reply, NewState}, where Reply is the reply to be sent to the client
 %% and NewState is the new state of the server.
 
+%% Connect the user by adding user to the server's list of users and returning
+%% ok
+%% Parameters:
+%%      NewPid, NewNick: details for the user
+%% Possible errors:
+%%      {error, user_already_connected}: when the Pid or Nick is taken.
 handle(State, {connect, NewPid, NewNick}) ->
     PossibleCollisons = [ collision || #user{ pid=Pid, nick=Nick } <- State#server_state.users, Pid == NewPid orelse Nick == NewNick],
     case PossibleCollisons of
@@ -31,7 +37,14 @@ handle(State, {connect, NewPid, NewNick}) ->
             {reply, {error, user_already_connected}, State}
     end;
 
-%TODO[kepp_track]: Should we keep track of the users channels just to handle this? If so, we need to reimplement it : the logic has been removed.
+%% Disconnect the user by removing from the server's list of user and returning
+%% ok.
+%% Parameters:
+%%      Pid: The pid of the user wishing to disconnect
+%% Possible errors:
+%%      {error, user_not_connected}
+%%      {error, leave_channel_first}
+%TODO[keep_track]: Should we keep track of the users channels just to handle this? If so, we need to reimplement it : the logic has been removed.
 handle(State, {disconnect, Pid}) ->
     io:fwrite("in disconnect~n", []),
     case catch(get_user(State, Pid)) of
@@ -52,8 +65,18 @@ handle(State, {disconnect, Pid}) ->
             io:fwrite("~p~n", [X])
     end;
 
+%% Let user join specified channel on the server they are connected to. 
+%% If the channel doesn't exist, create it and add it to our list of channels.
+%% Tell the channel to connect the user.
+%% Parameters:
+%%      ChannelName: the name of the channel (starts with '#')
+%%      UserPid: The Pid of the client wishing to join
+%% Possible errors:
+%%      {error, user_already_joined}
 handle(State, {join, ChannelName, UserPid}) ->
     Channel = get_channel_atom(State, ChannelName),
+    % It is necessary to create channel even if user fails to connect later,
+    % since we need to create a channel to contact it.
     NewState = case lists:member(Channel, State#server_state.channels) of
         false ->
             create_channel(State, Channel, ChannelName);
