@@ -16,6 +16,8 @@ initial_state(ChannelName) ->
 %% requesting process and NewState is the new state of the client.
 
 %% Join channel
+%% Parameters in request:
+%%   User: A user record for the joining user
 handle(State, {join, User}) ->
     case is_user_in_channel(State, User) of
         true ->
@@ -26,6 +28,8 @@ handle(State, {join, User}) ->
     end;
 
 %% Leave channel
+%% Parameters in request:
+%%   User: A user record for the leaving user
 handle(State, {leave, User}) ->
     case is_user_in_channel(State, User) of
         false ->
@@ -35,7 +39,10 @@ handle(State, {leave, User}) ->
             {reply, ok, NewState}
     end;
 
-% Send message
+%% Send message
+%% Parameters in request:
+%%   Sender: A user record for the sending user
+%%   Message: A string containing the message to send
 handle(State, {send_message, Sender, Message}) ->
     case is_user_in_channel(State, Sender) of
         false ->
@@ -48,10 +55,16 @@ handle(State, {send_message, Sender, Message}) ->
 
 %% -----------------------------------------------------------------------------
 
+%% Parameters:
+%%   Sender: A user record for the sending user
+%%   Receiver: A user record for the user that should receive the message
+%%   Message: A string containing the message
 send_message(State, Sender, Receiver, Message) ->
     genserver:request(Receiver#user.pid, {incoming_msg, State#channel_state.name, Sender#user.nick, Message}).
 
 %% -----------------------------------------------------------------------------
 
+%% Parameters:
+%%   User: A user record for the user that we want to check for
 is_user_in_channel(State, User) ->
     lists:member(User, State#channel_state.users).
