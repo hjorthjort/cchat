@@ -71,14 +71,16 @@ handle(State, {join, ChannelName, ClientPid}) ->
     end;
 
 handle(State, {leave, Channel, Pid}) ->
-    {Nick, CurrentChannels} = get_user(State, Pid),
-    case lists:member(Channel, CurrentChannels) of
+    User = get_user(State, Pid),
+    ChannelName =list_to_atom(State#server_state.name ++ Channel),
+    case lists:member(ChannelName, State#server_state.channels) of
         true ->
-            TmpList = proplists:delete(Pid, State#server_state.users),
-            NewUsers = [ {Pid, {Nick, lists:delete(Channel, CurrentChannels)}} | TmpList],
-            NewState = State#server_state{ users = NewUsers },
-            io:fwrite("Users: ~p~n", [NewState#server_state.users]),
-            {reply, ok, NewState};
+            case genserver:request(ChannelName, {leave, User}) of
+                ok ->
+                    {reply, ok, State};
+                {error, user_not_joined} ->
+                    {reply, {error, user_not_joined}, State}
+            end;
         false ->
             {reply, {error, user_not_joined}, State}
     end;
