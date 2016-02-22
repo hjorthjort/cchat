@@ -50,8 +50,7 @@ handle(State, {disconnect, Pid}) ->
     end;
 
 handle(State, {join, ChannelName, ClientPid}) ->
-    Channel = list_to_atom(State#server_state.name ++ ChannelName),
-
+    Channel = get_channel_atom(State, ChannelName),
     NewState = case lists:member(Channel, State#server_state.channels) of
         false ->
             create_channel(State, Channel);
@@ -66,12 +65,12 @@ handle(State, {join, ChannelName, ClientPid}) ->
             {reply, {error, user_already_joined}, NewState}
     end;
 
-handle(State, {leave, Channel, Pid}) ->
+handle(State, {leave, ChannelName, Pid}) ->
     User = get_user(State, Pid),
-    ChannelName =list_to_atom(State#server_state.name ++ Channel),
-    case lists:member(ChannelName, State#server_state.channels) of
+    Channel = get_channel_atom(State, ChannelName),
+    case lists:member(Channel, State#server_state.channels) of
         true ->
-            case genserver:request(ChannelName, {leave, User}) of
+            case genserver:request(Channel, {leave, User}) of
                 ok ->
                     {reply, ok, State};
                 {error, user_not_joined} ->
@@ -82,16 +81,14 @@ handle(State, {leave, Channel, Pid}) ->
     end;
 
 handle(State, {send_message, Channel, Message, Sender}) ->
-    {Nick, ConnectedChannels} = proplists:get_value(Sender, State#server_state.users),
-    case lists:member(Channel, ConnectedChannels) of
-        false ->
-            {reply, {error, user_not_joined}, State};
-        true ->
-            [ genserver:request(Pid, {incoming_msg, Channel, Nick, Message }) ||
-                {Pid, {_, Channels}} <- State#server_state.users, lists:member(Channel, Channels),
-                Pid /= Sender],
-            {reply, ok, State}
+    User = proplists:get_value(Sender, State#server_state.users),
+    case genserver:request(get_channel_atom(State, Channel), {send_message, User, Message}) of 
+       _ ->
+            ok
     end.
+
+get_channel_atom(State, Channel) ->
+    list_to_atom(State#server_state.name ++ Channel) .
 
 % Returns the user with the given Pid, or `undefined` if user is not connected
 get_user( State, Pid) ->
