@@ -1,10 +1,13 @@
 -module(channel).
--export([handle/2, initial_state/1]).
+-export([handle/2, initial_state/2]).
 -include_lib("./defs.hrl").
 
 %% Produce initial state
-initial_state(ChannelName) ->
-    #channel_state { name=ChannelName }.
+initial_state(Atom, Name) ->
+    #channel_state {
+       atom = Atom,
+       name = Name
+      }.
 
 %% -----------------------------------------------------------------------------
 

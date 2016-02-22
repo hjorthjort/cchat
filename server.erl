@@ -53,7 +53,7 @@ handle(State, {join, ChannelName, UserPid}) ->
     Channel = get_channel_atom(State, ChannelName),
     NewState = case lists:member(Channel, State#server_state.channels) of
         false ->
-            create_channel(State, Channel);
+            create_channel(State, Channel, ChannelName);
         true ->
             State
     end,
@@ -104,6 +104,6 @@ get_user( State, Pid) ->
             Head
     end.
 
-create_channel(State, Channel) ->
-    genserver:start(Channel, channel:initial_state(Channel), fun channel:handle/2),
-    State#server_state{channels = [Channel | State#server_state.channels]}.
+create_channel(State, Atom, UnqualifiedChannelName) ->
+    genserver:start(Atom, channel:initial_state(Atom, UnqualifiedChannelName), fun channel:handle/2),
+    State#server_state{channels = [Atom | State#server_state.channels]}.
