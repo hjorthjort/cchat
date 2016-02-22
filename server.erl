@@ -68,7 +68,7 @@ handle(State, {join, ChannelName, ClientPid}) ->
                 true ->
                     {reply, {error, user_already_joined}, State}
             end
-    end.
+    end;
 
 handle(State, {leave, Channel, Pid}) ->
     {Nick, CurrentChannels} = get_user(State, Pid),
@@ -120,7 +120,7 @@ update_user(State, User) ->
 
 % Returns the channel with the given name, or `undefined` if the channel doesn't exist
 get_channel(State, ChannelName) ->
-    case lists:filter(fun(Channel) -> Channel#channel.name =:= ChannelName, State#server_state.channels) of
+    case lists:filter(fun(Channel) -> Channel#channel.name =:= ChannelName end, State#server_state.channels) of
         % No matches, channel doesn't exist
         [] ->
             undefined;
@@ -130,14 +130,14 @@ get_channel(State, ChannelName) ->
     end.
 
 is_user_in_channel(Channel, ClientPid) ->
-    case lists:filter(fun(User) -> User#user.pid =:= ClientPid, Channel#channel.users) of
+    case lists:filter(fun(User) -> User#user.pid =:= ClientPid end, Channel#channel.users) of
         % No matches, user is not in channel
         [] ->
             false;
         % One match, user is in channel
         [_H] ->
             true
-    end
+    end.
 
 add_user_to_channel(State, Channel, ClientPid) ->
     FilteredChannels = lists:filter(fun(C) -> C /= Channel, State#server_state.channels),
