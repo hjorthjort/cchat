@@ -7,7 +7,7 @@
 
 % Produce initial state
 initial_state(ServerName) ->
-    #server_state{}.
+    #server_state{name = ServerName}.
 
 %% ---------------------------------------------------------------------------
 
@@ -51,6 +51,22 @@ handle(State, {disconnect, Pid}) ->
     end;
 
 handle(State, {join, ChannelName, ClientPid}) ->
+    Channel = list_to_atom(State#server_state.name ++ ChannelName),
+
+    NewState = case lists:member(Channel, State#server_state.channels) of
+        false ->
+            create_channel(State, Channel);
+        true ->
+            State
+    end,
+
+    case genserver:request(Channel, {join, ClientPid}) of
+        ok ->
+            {reply, ok, NewState};
+        {error, user_already_joined} ->
+            {reply, {error, user_already_joined}, NewState}
+    end.
+
     % Does channel exist?
     case get_channel(State, ChannelName) of
         % No, create channel
@@ -144,7 +160,6 @@ add_user_to_channel(State, Channel, ClientPid) ->
     NewChannel = Channel#channel{users = [ClientPid | Channel#channel.users]}},
     State#server_state{channels = [NewChannel | FilteredChannels]}.
 
-create_channel(State, ChannelName, ClientPid) ->
-    ChannelPid = spawn(fun channel_loop/0),
-    Channel = #channel{name = ChannelName, pid = ChannelPid, users = [ClientPid]},
-    State#server_state{channels = [Channel | State#server_state.channels]},
+create_channel(State, Channel) ->
+    genserver:start(Channel, channel:initial_state(Channel), fun channel:handle/2),
+    State#server_state{channels = [Channel | State#server_state.channels]}.
