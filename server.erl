@@ -32,16 +32,22 @@ handle(State, {connect, NewPid, NewNick}) ->
     end;
 
 handle(State, {disconnect, Pid}) ->
-    case get_user(State, Pid) of
+    io:fwrite("in disconnect~n", []),
+    case catch(get_user(State, Pid)) of
         undefined ->
             {reply, {error, user_not_connected}, State};
-        {_Nick, [_H | _T]} ->
+        %User is connected to chat channels
+        #user{channels=[_H | _T]} ->
             {reply, {error, leave_channels_first}, State};
-        {_Nick, []} ->
+        %User is not connected to any channels
+        #user{channels=[]} ->
             CurrentUsers = State#server_state.users,
-            NewState = State#server_state{ users = proplists:delete(Pid, CurrentUsers)},
+            NewState = State#server_state{ users = [User ||
+                    User <- State#server_state.users, User#user.pid /= Pid]},
             io:fwrite("Users: ~p~n", [NewState#server_state.users]),
-            {reply, ok, NewState}
+            {reply, ok, NewState};
+        X ->
+            io:fwrite("~p~n", [X])
     end;
 
 handle(State, {join, ChannelName, ClientPid}) ->
@@ -81,14 +87,16 @@ handle(State, {join, ChannelName, ClientPid}) ->
     % end.
 
 handle(State, {leave, Channel, Pid}) ->
-    {Nick, CurrentChannels} = get_user(State, Pid),
-    case lists:member(Channel, CurrentChannels) of
+    User = get_user(State, Pid),
+    ChannelName =list_to_atom(State#server_state.name ++ Channel),
+    case lists:member(ChannelName, State#server_state.channels) of
         true ->
-            TmpList = proplists:delete(Pid, State#server_state.users),
-            NewUsers = [ {Pid, {Nick, lists:delete(Channel, CurrentChannels)}} | TmpList],
-            NewState = State#server_state{ users = NewUsers },
-            io:fwrite("Users: ~p~n", [NewState#server_state.users]),
-            {reply, ok, NewState};
+            case genserver:request(ChannelName, {leave, User}) of
+                ok ->
+                    {reply, ok, State};
+                {error, user_not_joined} ->
+                    {reply, {error, user_not_joined}, State}
+            end;
         false ->
             {reply, {error, user_not_joined}, State}
     end;
@@ -105,7 +113,7 @@ handle(State, {send_message, Channel, Message, Sender}) ->
             {reply, ok, State}
     end;
 
-
+%TODO: Remove this
 handle(St, Request) ->
     io:fwrite("Server received: ~p~n", [Request]),
     Response = "hi! You failed at pattern matching!",
@@ -113,8 +121,13 @@ handle(St, Request) ->
     {reply, Response, St}.
 
 % Returns the user with the given Pid, or `undefined` if user is not connected
-get_user(State, Pid) ->
-    proplists:get_value(Pid, State#server_state.users).
+get_user( State, Pid) ->
+    case [ User || User <- State#server_state.users, User#user.pid == Pid ] of
+        [] ->
+            undefined;
+        [Head] ->
+            Head
+    end.
 
 % Updates a single user and returns the new server state
 update_user(State, User) ->
@@ -123,7 +136,7 @@ update_user(State, User) ->
 
 % Returns the channel with the given name, or `undefined` if the channel doesn't exist
 get_channel(State, ChannelName) ->
-    case lists:filter(fun(Channel) -> Channel#channel.name =:= ChannelName, State#server_state.channels) of
+    case lists:filter(fun(Channel) -> Channel#channel.name =:= ChannelName end, State#server_state.channels) of
         % No matches, channel doesn't exist
         [] ->
             undefined;
@@ -133,14 +146,14 @@ get_channel(State, ChannelName) ->
     end.
 
 is_user_in_channel(Channel, ClientPid) ->
-    case lists:filter(fun(User) -> User#user.pid =:= ClientPid, Channel#channel.users) of
+    case lists:filter(fun(User) -> User#user.pid =:= ClientPid end, Channel#channel.users) of
         % No matches, user is not in channel
         [] ->
             false;
         % One match, user is in channel
         [_H] ->
             true
-    end
+    end.
 
 add_user_to_channel(State, Channel, ClientPid) ->
     FilteredChannels = lists:filter(fun(C) -> C /= Channel, State#server_state.channels),
