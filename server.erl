@@ -48,7 +48,7 @@ handle(State, {connect, NewPid, NewNick}) ->
 handle(State, {disconnect, Pid}) ->
     io:fwrite("in disconnect~n", []),
     case catch(get_user(State, Pid)) of
-        undefined ->
+       undefined ->
             {reply, {error, user_not_connected}, State};
         %User is connected to chat channels
         %TODO[keep_track]
@@ -83,7 +83,6 @@ handle(State, {join, ChannelName, UserPid}) ->
         true ->
             State
     end,
-
     User = get_user(State, UserPid),
     case genserver:request(Channel, {join, User}) of
         ok ->
