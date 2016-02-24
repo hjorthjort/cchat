@@ -130,8 +130,12 @@ handle(State, {send_message, Channel, Message, SenderPid}) ->
             {reply, ok, State}
     end.
 
+%% ---------------------------------------------------------------------------
+
 get_channel_atom(State, Channel) ->
-    list_to_atom(State#server_state.name ++ Channel) .
+    list_to_atom(State#server_state.name ++ Channel).
+
+%% ---------------------------------------------------------------------------
 
 % Returns the user with the given Pid, or `undefined` if user is not connected
 get_user( State, Pid) ->
@@ -141,6 +145,8 @@ get_user( State, Pid) ->
         [Head] ->
             Head
     end.
+
+%% ---------------------------------------------------------------------------
 
 create_channel(State, Atom, UnqualifiedChannelName) ->
     genserver:start(Atom, channel:initial_state(Atom, UnqualifiedChannelName), fun channel:handle/2),
