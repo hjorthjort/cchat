@@ -23,19 +23,11 @@ initial_state(ServerName) ->
 %% Parameters:
 %%      NewPid, NewNick: details for the user
 %% Possible errors:
-%%      {error, user_already_connected}: when the Pid or Nick is taken.
+%%      none
 handle(State, {connect, NewPid, NewNick}) ->
-    PossibleCollisons = [ collision || #user{ pid=Pid, nick=Nick } <- State#server_state.users, Pid == NewPid orelse Nick == NewNick],
-    case PossibleCollisons of
-        % No collissions means we add the user to our list and reply with ok
-        [] ->
-            NewState = State#server_state{users = [ #user{ pid=NewPid, nick=NewNick} |
+    NewState = State#server_state{users = [ #user{ pid=NewPid, nick=NewNick} |
                                                     State#server_state.users ]},
-            {reply, ok, NewState};
-        % If we get a collission we reply with an error and unchanged state
-        [_H | _T] ->
-            {reply, {error, user_already_connected}, State}
-    end;
+    {reply, ok, NewState};
 
 %% Disconnect the user by removing from the server's list of user and returning
 %% ok.
