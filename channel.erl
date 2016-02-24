@@ -18,44 +18,31 @@ initial_state(Atom, Name) ->
 %% {reply, Reply, NewState}, where Reply is the reply to be sent to the
 %% requesting process and NewState is the new state of the client.
 
-%% Join channel
+%% Join channel. Allows same user to join multiple times, and thus assumes that
+%% if the user can only join once, the client keeps track of this.
 %% Parameters in request:
 %%   User: A user record for the joining user
 handle(State, {join, User}) ->
-    case is_user_in_channel(State, User) of
-        true ->
-            {reply, {error, user_already_joined}, State};
-        false ->
-            NewState = State#channel_state{ users = [User | State#channel_state.users] },
-            {reply, ok, NewState}
-    end;
+    NewState = State#channel_state{ users = [User | State#channel_state.users] },
+    {reply, ok, NewState};
 
-%% Leave channel
+%% Leave channel. If user is not in channel this has no effect.
 %% Parameters in request:
 %%   User: A user record for the leaving user
 handle(State, {leave, User}) ->
-    case is_user_in_channel(State, User) of
-        false ->
-            {reply, {error, user_not_joined}, State};
-        true ->
-            NewState = State#channel_state{ users = lists:delete(User, State#channel_state.users) },
-            {reply, ok, NewState}
-    end;
+    NewState = State#channel_state{ users = lists:delete(User, State#channel_state.users) },
+    {reply, ok, NewState};
 
 %% Send message
 %% Parameters in request:
 %%   Sender: A user record for the sending user
 %%   Message: A string containing the message to send
 handle(State, {send_message, Sender, Message}) ->
-    io:fwrite("[channel] State: ~p~n", [State]),
-    case is_user_in_channel(State, Sender) of
-        false ->
-            {reply, {error, user_not_joined}, State};
-        true ->
-            UsersToSendTo = lists:delete(Sender, State#channel_state.users),
-            lists:foreach(fun(Receiver) -> send_message(State, Sender, Receiver, Message) end, UsersToSendTo),
-            {reply, ok, State}
-    end.
+    UsersToSendTo = lists:filter(fun(User) -> Sender#user.pid =/= User#user.pid
+                                 end, State#channel_state.users),
+    lists:foreach(fun(Receiver) -> send_message(State, Sender, Receiver,
+                                                Message) end, UsersToSendTo),
+    {reply, ok, State}.
 
 %% -----------------------------------------------------------------------------
 
