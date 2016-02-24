@@ -69,7 +69,7 @@ handle(State, {join, ChannelName, UserPid}) ->
     genserver:request(Channel, {join, User}),
     {reply, ok, NewState};
 
-%% Let user leave a channel that they are connected to.
+%% Let user leave a channel that they are connected to. Assumes channel exists.
 %% Parameters:
 %%      ChannelName: the name of the channel (starts with '#')
 %%      UserPid: the pid of the client wishing to leave the channel
