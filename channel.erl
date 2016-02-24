@@ -52,7 +52,7 @@ handle(State, {send_message, Sender, Message}) ->
         false ->
             {reply, {error, user_not_joined}, State};
         true ->
-            UsersToSendTo = lists:filter(fun(User) -> User#user.nick =/= Sender#user.nick end, State#channel_state.users),
+            UsersToSendTo = lists:delete(Sender, State#channel_state.users),
             lists:foreach(fun(Receiver) -> send_message(State, Sender, Receiver, Message) end, UsersToSendTo),
             {reply, ok, State}
     end.
