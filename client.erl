@@ -59,7 +59,17 @@ handle(State, {leave, Channel}) ->
 
 % Sending messages
 handle(State, {msg_from_GUI, Channel, Message}) ->
-    request(State#client_state.server, {send_message, Channel, Message, self()}, State, State);
+    case State#client_state.server of
+        undefined ->
+            {reply, {error, user_not_connected, "Not connected to server"}, State};
+        Server ->
+            case lists:member(Channel, State#client_state.channels) of
+                true ->
+                    request(Server, {send_message, Channel, Message, self()}, State, State);
+                false ->
+                    {reply, {error, user_not_joined, "Not in channel"}, State}
+            end
+    end;
 
 %% Get current nick
 handle(State, whoami) ->
