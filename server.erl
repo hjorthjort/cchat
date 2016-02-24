@@ -153,6 +153,10 @@ get_user(State, Pid) ->
 
 %% ---------------------------------------------------------------------------
 
+%% Creates a new channel and returns a new server state.
+%% Parameters:
+%%      Atom: the atom to register the new channel process with
+%%      UnqualifiedChannelName: channel name without the server prefix
 create_channel(State, Atom, UnqualifiedChannelName) ->
     genserver:start(Atom, channel:initial_state(Atom, UnqualifiedChannelName), fun channel:handle/2),
     State#server_state{channels = [Atom | State#server_state.channels]}.
