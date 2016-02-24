@@ -91,6 +91,12 @@ handle(State, {join, ChannelName, UserPid}) ->
             {reply, {error, user_already_joined}, NewState}
     end;
 
+%% Let user leave a channel that they are connected to. If the channel doesn't
+%% exist or if the user has not joined the channel since before, we reply with
+%% the error user_not_joined.
+%% Parameters:
+%%      ChannelName: the name of the channel (starts with '#')
+%%      UserPid: the pid of the client wishing to leave the channel
 handle(State, {leave, ChannelName, UserPid}) ->
     User = get_user(State, UserPid),
     Channel = get_channel_atom(State, ChannelName),
