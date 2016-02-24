@@ -69,7 +69,7 @@ handle(State, {join, ChannelName, UserPid}) ->
     genserver:request(Channel, {join, User}),
     {reply, ok, NewState};
 
-%% Let user leave a channel that they are connected to. Assumes channel exists.
+%% Let user leave a channel that they are connected to. Assumes channel exists. 
 %% Parameters:
 %%      ChannelName: the name of the channel (starts with '#')
 %%      UserPid: the pid of the client wishing to leave the channel
@@ -81,23 +81,18 @@ handle(State, {leave, ChannelName, UserPid}) ->
     genserver:request(Channel, {leave, User}),
     {reply, ok, State};
 
-%% Sends a message to a channel.
+%% Sends a message to a channel. Assumes channel exists.
 %% Parameters:
 %%      Channel: the name of the channel to send to (starts with '#')
 %%      Message: the message to send
 %%      SenderPid: the pid to the client wishing to send the message
 %% Possible errors:
-%%      {error, user_not_joined} when user is not in the specified channel
+%%      none
 handle(State, {send_message, Channel, Message, SenderPid}) ->
     User = get_user(State, SenderPid),
-    io:fwrite("[server] State: ~p~n", [State]),
-    case genserver:request(get_channel_atom(State, Channel),
-                           {send_message, User, Message}) of
-        {error, user_not_joined} ->
-            {reply, {error, user_not_joined}, State};
-        ok ->
-            {reply, ok, State}
-    end.
+    genserver:request(get_channel_atom(State, Channel),
+                           {send_message, User, Message}),
+    {reply, ok, State}.
 
 %% ---------------------------------------------------------------------------
 
