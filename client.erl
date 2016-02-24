@@ -26,7 +26,12 @@ handle(State, disconnect) ->
 
 % Join channel
 handle(State, {join, Channel}) ->
-    request(State#client_state.server, {join, Channel, self()}, State, State);
+    case lists:member(Channel, State#client_state.channels) of
+        false ->
+            request(State#client_state.server, {join, Channel, self()}, State, State#client_state{ channels = [ Channel | State#client_state.channels ]});
+        true ->
+            {reply, {error, user_already_joined, "Channel already joined"}, State}
+    end;
 
 %% Leave channel
 handle(State, {leave, Channel}) ->

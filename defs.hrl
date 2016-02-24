@@ -4,7 +4,7 @@
 %   nick: the chosen nickname for the client
 %   gui: the name (or Pid) of the GUI process.
 %   server: the server which the client is currently connected to
--record(client_state, { nick, gui, server }).
+-record(client_state, { nick, gui, server, channels=[] }).
 
 % This record defines the structure of the server process.
 % Add whatever other fields you need.
