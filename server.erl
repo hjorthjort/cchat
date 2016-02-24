@@ -65,7 +65,7 @@ handle(State, {disconnect, Pid}) ->
             io:fwrite("~p~n", [X])
     end;
 
-%% Let user join specified channel on the server they are connected to. 
+%% Let user join specified channel on the server they are connected to.
 %% If the channel doesn't exist, create it and add it to our list of channels.
 %% Tell the channel to connect the user.
 %% Parameters:
@@ -112,11 +112,12 @@ handle(State, {leave, ChannelName, UserPid}) ->
             {reply, {error, user_not_joined}, State}
     end;
 
+
 handle(State, {send_message, Channel, Message, SenderPid}) ->
     User = get_user(State, SenderPid),
     io:fwrite("[server] State: ~p~n", [State]),
     case genserver:request(get_channel_atom(State, Channel),
-                           {send_message, User, Message}) of 
+                           {send_message, User, Message}) of
         {error, user_not_joined} ->
             {reply, {error, user_not_joined}, State};
         ok ->
