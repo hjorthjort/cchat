@@ -25,9 +25,15 @@ initial_state(ServerName) ->
 %% Possible errors:
 %%      none
 handle(State, {connect, NewPid, NewNick}) ->
-    NewState = State#server_state{users = [ #user{ pid=NewPid, nick=NewNick} |
+    case lists:filter(fun(Elem) -> NewNick == Elem#user.nick end, State#server_state.users) of
+        [] ->
+            NewState = State#server_state{users = [ #user{ pid=NewPid, nick=NewNick} |
                                                     State#server_state.users ]},
-    {reply, ok, NewState};
+            {reply, ok, NewState};
+        [_H | _T] ->
+            io:fwrite("~p~n", [_H | _T]),
+            {reply, {error, user_already_connected}, State}
+    end;
 
 %% Disconnect the user by removing from the server's list of user and returning
 %% ok.
