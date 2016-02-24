@@ -37,7 +37,7 @@ handle(State, {join, Channel}) ->
 handle(State, {leave, Channel}) ->
     case lists:member(Channel, State#client_state.channels) of
         true ->
-            request(State#client_state.server, {leave, Channel, self()}, State, State#client_state{ channels = lists:deletd(Channel, State#client_state.channels) });
+            request(State#client_state.server, {leave, Channel, self()}, State, State#client_state{ channels = lists:delete(Channel, State#client_state.channels) });
         false ->
             {reply, {error, user_not_joined, "Not in channel"}, State}
     end;
