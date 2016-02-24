@@ -140,8 +140,10 @@ get_channel_atom(State, Channel) ->
 
 %% ---------------------------------------------------------------------------
 
-% Returns the user with the given Pid, or `undefined` if user is not connected
-get_user( State, Pid) ->
+%% Returns the user with the given Pid, or `undefined` if user is not connected.
+%% Parameters:
+%%      Pid: the pid to the client associated with the user record we want to get
+get_user(State, Pid) ->
     case [ User || User <- State#server_state.users, User#user.pid == Pid ] of
         [] ->
             undefined;
