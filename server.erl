@@ -132,6 +132,9 @@ handle(State, {send_message, Channel, Message, SenderPid}) ->
 
 %% ---------------------------------------------------------------------------
 
+%% Returns the atom used to identify a channel.
+%% Parameters:
+%%      Channel: the name of the channel (starts with '#')
 get_channel_atom(State, Channel) ->
     list_to_atom(State#server_state.name ++ Channel).
 
