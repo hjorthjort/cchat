@@ -17,8 +17,13 @@ initial_state(Nick, GUIName) ->
 
 %% Connect to server
 handle(State, {connect, Server}) ->
-    ServerAtom = list_to_atom(Server),
-    request(ServerAtom, {connect, self(), State#client_state.nick}, State, State#client_state{server = ServerAtom});
+    case State#client_state.server of
+        undefined ->
+            ServerAtom = list_to_atom(Server),
+            request(ServerAtom, {connect, self(), State#client_state.nick}, State, State#client_state{server = ServerAtom});
+        _Server ->
+            {reply, {error, user_already_connected, "Already connected to server"}, State}
+    end;
 
 %% Disconnect from server
 handle(State, disconnect) ->
