@@ -54,7 +54,7 @@ handle(State, {disconnect, Pid}) ->
 %%      ChannelName: the name of the channel (starts with '#')
 %%      UserPid: The Pid of the client wishing to join
 %% Possible errors:
-%%      {error, user_already_joined}
+%%      none
 handle(State, {join, ChannelName, UserPid}) ->
     Channel = get_channel_atom(State, ChannelName),
     % It is necessary to create channel even if user fails to connect later,
@@ -66,12 +66,8 @@ handle(State, {join, ChannelName, UserPid}) ->
             State
     end,
     User = get_user(State, UserPid),
-    case genserver:request(Channel, {join, User}) of
-        ok ->
-            {reply, ok, NewState};
-        {error, user_already_joined} ->
-            {reply, {error, user_already_joined}, NewState}
-    end;
+    genserver:request(Channel, {join, User}),
+    {reply, ok, NewState};
 
 %% Let user leave a channel that they are connected to.
 %% Parameters:
