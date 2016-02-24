@@ -25,10 +25,13 @@ initial_state(ServerName) ->
 %% Possible errors:
 %%      none
 handle(State, {connect, NewPid, NewNick}) ->
-    case lists:filter(fun(Elem) -> NewNick == Elem#user.nick end, State#server_state.users) of
+    case lists:filter(fun(Elem) -> NewNick == Elem#user.nick end,
+                      State#server_state.users) of
         [] ->
-            NewState = State#server_state{users = [ #user{ pid=NewPid, nick=NewNick} |
-                                                    State#server_state.users ]},
+            NewState = State#server_state{users = [ #user{ pid=NewPid,
+                                                           nick=NewNick} |
+                                                    State#server_state.users
+                                                  ]},
             {reply, ok, NewState};
         [_H | _T] ->
             io:fwrite("~p~n", [_H | _T]),
@@ -122,5 +125,6 @@ get_user(State, Pid) ->
 %%      Atom: the atom to register the new channel process with
 %%      UnqualifiedChannelName: channel name without the server prefix
 create_channel(State, Atom, UnqualifiedChannelName) ->
-    genserver:start(Atom, channel:initial_state(Atom, UnqualifiedChannelName), fun channel:handle/2),
+    genserver:start(Atom, channel:initial_state(Atom, UnqualifiedChannelName),
+                    fun channel:handle/2),
     State#server_state{channels = [Atom | State#server_state.channels]}.
