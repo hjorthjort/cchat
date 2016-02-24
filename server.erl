@@ -74,21 +74,12 @@ handle(State, {join, ChannelName, UserPid}) ->
 %%      ChannelName: the name of the channel (starts with '#')
 %%      UserPid: the pid of the client wishing to leave the channel
 %% Possible errors:
-%%      {error, user_not_joined} when channel doesn't exist or user is not in channel
+%%      none
 handle(State, {leave, ChannelName, UserPid}) ->
     User = get_user(State, UserPid),
     Channel = get_channel_atom(State, ChannelName),
-    case lists:member(Channel, State#server_state.channels) of
-        true ->
-            case genserver:request(Channel, {leave, User}) of
-                ok ->
-                    {reply, ok, State};
-                {error, user_not_joined} ->
-                    {reply, {error, user_not_joined}, State}
-            end;
-        false ->
-            {reply, {error, user_not_joined}, State}
-    end;
+    genserver:request(Channel, {leave, User}),
+    {reply, ok, State};
 
 %% Sends a message to a channel.
 %% Parameters:
