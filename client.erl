@@ -22,7 +22,12 @@ handle(State, {connect, Server}) ->
 
 %% Disconnect from server
 handle(State, disconnect) ->
-    request(State#client_state.server, {disconnect, self()}, State, State#client_state{server = undefined});
+    case State#client_state.channels of
+        [] ->
+            request(State#client_state.server, {disconnect, self()}, State, State#client_state{server = undefined});
+        [_H | _T ] ->
+            {reply, {error, leave_channels_first, "Leave channels before disconnecting"}, State}
+    end;
 
 % Join channel
 handle(State, {join, Channel}) ->
