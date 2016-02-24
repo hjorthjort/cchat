@@ -112,7 +112,13 @@ handle(State, {leave, ChannelName, UserPid}) ->
             {reply, {error, user_not_joined}, State}
     end;
 
-
+%% Sends a message to a channel.
+%% Parameters:
+%%      Channel: the name of the channel to send to (starts with '#')
+%%      Message: the message to send
+%%      SenderPid: the pid to the client wishing to send the message
+%% Possible errors:
+%%      {error, user_not_joined} when user is not in the specified channel
 handle(State, {send_message, Channel, Message, SenderPid}) ->
     User = get_user(State, SenderPid),
     io:fwrite("[server] State: ~p~n", [State]),
