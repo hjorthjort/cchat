@@ -34,28 +34,12 @@ handle(State, {connect, NewPid, NewNick}) ->
 %% Parameters:
 %%      Pid: The pid of the user wishing to disconnect
 %% Possible errors:
-%%      {error, user_not_connected}
-%%      {error, leave_channel_first}
-%TODO[keep_track]: Should we keep track of the users channels just to handle this? If so, we need to reimplement it : the logic has been removed.
+%%      none
 handle(State, {disconnect, Pid}) ->
-    io:fwrite("in disconnect~n", []),
-    case catch(get_user(State, Pid)) of
-       undefined ->
-            {reply, {error, user_not_connected}, State};
-        %User is connected to chat channels
-        %TODO[keep_track]
-        #user{channels=[_H | _T]} ->
-            {reply, {error, leave_channels_first}, State};
-        %User is not connected to any channels
-        %TODO[keep_track]
-        #user{channels=[]} ->
-            NewState = State#server_state{ users = [User ||
-                    User <- State#server_state.users, User#user.pid /= Pid]},
-            io:fwrite("Users: ~p~n", [NewState#server_state.users]),
-            {reply, ok, NewState};
-        X ->
-            io:fwrite("~p~n", [X])
-    end;
+    NewState = State#server_state{ users = [User ||
+                                            User <- State#server_state.users,
+                                            User#user.pid =/= Pid]},
+    {reply, ok, NewState};
 
 %% Let user join specified channel on the server they are connected to.
 %% If the channel doesn't exist, create it and add it to our list of channels.
