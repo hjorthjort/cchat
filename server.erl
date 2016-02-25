@@ -62,17 +62,15 @@ handle(State, {join, ChannelName, UserPid}) ->
     Channel = get_channel_atom(State, ChannelName),
     % It is necessary to create channel even if user fails to connect later,
     % since we need to create a channel to contact it.
-    NewState = case lists:member(Channel, State#server_state.channels) of
-        false ->
-            create_channel(State, Channel, ChannelName);
-        true ->
-            State
+    case whereis(get_channel_atom(State, ChannelName)) of
+        undefined ->
+            create_channel(State, Channel, ChannelName)
     end,
     User = get_user(State, UserPid),
     Channel ! {join, User},
-    {reply, ok, NewState};
+    {reply, ok, State};
 
-%% Let user leave a channel that they are connected to. Assumes channel exists. 
+%% Let user leave a channel that they are connected to. Assumes channel exists.
 %% Parameters:
 %%      ChannelName: the name of the channel (starts with '#')
 %%      UserPid: the pid of the client wishing to leave the channel
