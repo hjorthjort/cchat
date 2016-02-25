@@ -19,7 +19,7 @@ initial_state(Atom, Name) ->
 %% requesting process and NewState is the new state of the client.
 
 loop(State) ->
-    receive 
+    receive
          Request ->
             NewState = handle(State, Request),
             loop(NewState)
@@ -59,10 +59,3 @@ handle(State, {send_message, Sender, Message}) ->
 %%   Message: A string containing the message
 send_message(State, Sender, Receiver, Message) ->
     spawn(fun() -> genserver:request(Receiver#user.pid, {incoming_msg, State#channel_state.name, Sender#user.nick, Message}) end).
-
-%% -----------------------------------------------------------------------------
-
-%% Parameters:
-%%   User: A user record for the user that we want to check for
-is_user_in_channel(State, User) ->
-    lists:member(User, State#channel_state.users).
