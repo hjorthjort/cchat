@@ -17,9 +17,7 @@ initial_state(Nick, GUIName) ->
 
 %% Connect to server
 handle(State, {connect, Server}) ->
-    % Check if the client is connected to a server
     case State#client_state.server of
-        % If we aren't connected -> proceed to connect
         undefined ->
             ServerAtom = list_to_atom(Server),
             case catch genserver:request(ServerAtom, {connect, self(), State#client_state.nick}) of
@@ -31,7 +29,6 @@ handle(State, {connect, Server}) ->
                 {'EXIT', _Reason} ->
                     {reply, {error, server_not_reached, "Server not reached"}, State}
             end;
-        % If we are already connected -> send back an error
         _Server ->
             {reply, {error, user_already_connected, "Already connected to server"}, State}
     end;
