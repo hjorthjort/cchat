@@ -11,19 +11,21 @@ initial_state(Atom, Name) ->
 
 %% -----------------------------------------------------------------------------
 
+loop(State) ->
+    receive
+        Request ->
+            NewState = handle(State, Request),
+            loop(NewState)
+    end.
+
+%% -----------------------------------------------------------------------------
+
 %% handle/2 handles requests from a server
 
 %% All requests are processed by handle/2 receiving the request data (and the
 %% current state), performing the needed actions, and returning a tuple
 %% {reply, Reply, NewState}, where Reply is the reply to be sent to the
 %% requesting process and NewState is the new state of the client.
-
-loop(State) ->
-    receive
-         Request ->
-            NewState = handle(State, Request),
-            loop(NewState)
-    end.
 
 %% Join channel. Allows same user to join multiple times, and thus assumes that
 %% if the user can only join once, the client keeps track of this.
