@@ -69,7 +69,7 @@ handle(State, {join, ChannelName, UserPid}) ->
             State
     end,
     User = get_user(State, UserPid),
-    genserver:request(Channel, {join, User}),
+    Channel ! {join, User},
     {reply, ok, NewState};
 
 %% Let user leave a channel that they are connected to. Assumes channel exists. 
@@ -81,7 +81,7 @@ handle(State, {join, ChannelName, UserPid}) ->
 handle(State, {leave, ChannelName, UserPid}) ->
     User = get_user(State, UserPid),
     Channel = get_channel_atom(State, ChannelName),
-    genserver:request(Channel, {leave, User}),
+    Channel ! {leave, User},
     {reply, ok, State};
 
 %% Sends a message to a channel. Assumes channel exists.
@@ -95,8 +95,7 @@ handle(State, {send_message, Channel, Message, SenderPid}) ->
     User = get_user(State, SenderPid),
     % We trust the channel to handle this well, and if it crashes it should not
     % influence the server
-    spawn(fun() -> genserver:request(get_channel_atom(State, Channel),
-                           {send_message, User, Message}) end),
+    get_channel_atom(State, Channel) ! {send_message, User, Message},
     {reply, ok, State}.
 
 %% ---------------------------------------------------------------------------
@@ -127,6 +126,6 @@ get_user(State, Pid) ->
 %%      Atom: the atom to register the new channel process with
 %%      UnqualifiedChannelName: channel name without the server prefix
 create_channel(State, Atom, UnqualifiedChannelName) ->
-    genserver:start(Atom, channel:initial_state(Atom, UnqualifiedChannelName),
-                    fun channel:handle/2),
-    State#server_state{channels = [Atom | State#server_state.channels]}.
+    Pid = spawn(fun() -> channel:loop(channel:initial_state(Atom, UnqualifiedChannelName)) end),
+    register(Atom, Pid),
+    State#server_state{channels = [ Atom | State#server_state.channels]}.

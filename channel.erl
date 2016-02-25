@@ -1,5 +1,5 @@
 -module(channel).
--export([handle/2, initial_state/2]).
+-export([loop/1, handle/2, initial_state/2]).
 -include_lib("./defs.hrl").
 
 %% Produce initial state
@@ -18,20 +18,27 @@ initial_state(Atom, Name) ->
 %% {reply, Reply, NewState}, where Reply is the reply to be sent to the
 %% requesting process and NewState is the new state of the client.
 
+loop(State) ->
+    receive 
+         Request ->
+            NewState = handle(State, Request),
+            loop(NewState)
+    end.
+
 %% Join channel. Allows same user to join multiple times, and thus assumes that
 %% if the user can only join once, the client keeps track of this.
 %% Parameters in request:
 %%   User: A user record for the joining user
 handle(State, {join, User}) ->
     NewState = State#channel_state{ users = [User | State#channel_state.users] },
-    {reply, ok, NewState};
+    NewState;
 
 %% Leave channel. If user is not in channel this has no effect.
 %% Parameters in request:
 %%   User: A user record for the leaving user
 handle(State, {leave, User}) ->
     NewState = State#channel_state{ users = lists:delete(User, State#channel_state.users) },
-    {reply, ok, NewState};
+    NewState;
 
 %% Send message
 %% Parameters in request:
@@ -42,7 +49,7 @@ handle(State, {send_message, Sender, Message}) ->
                                  end, State#channel_state.users),
     lists:foreach(fun(Receiver) -> send_message(State, Sender, Receiver,
                                                 Message) end, UsersToSendTo),
-    {reply, ok, State}.
+    State.
 
 %% -----------------------------------------------------------------------------
 
