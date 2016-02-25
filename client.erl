@@ -17,45 +17,55 @@ initial_state(Nick, GUIName) ->
 
 %% Connect to server
 handle(State, {connect, Server}) ->
+    % Check if the client is connected to a server
     case State#client_state.server of
+        % If we aren't connected -> proceed to connect
         undefined ->
             ServerAtom = list_to_atom(Server),
-            case request(ServerAtom, {connect, self(), State#client_state.nick}) of
+            case catch genserver:request(ServerAtom, {connect, self(), State#client_state.nick}) of
                 ok ->
                     NewState = State#client_state{server = ServerAtom},
                     {reply, ok, NewState};
-                Response ->
-                    {reply, Response, State}
+                {error, user_already_connected} ->
+                    {reply, {error, user_already_connected, "Your nick is already taken"}, State};
+                {'EXIT', _Reason} ->
+                    {reply, {error, server_not_reached, "Server not reached"}, State}
             end;
+        % If we are already connected -> send back an error
         _Server ->
             {reply, {error, user_already_connected, "Already connected to server"}, State}
     end;
 
 %% Disconnect from server
 handle(State, disconnect) ->
-    case State#client_state.channels of
-        [] ->
-            case request(State#client_state.server, {disconnect, self()}) of
-                ok ->
-                    NewState = State#client_state{server = undefined},
-                    {reply, ok, NewState};
-                Response ->
-                    {reply, Response, State}
-            end;
-        [_H | _T ] ->
-            {reply, {error, leave_channels_first, "Leave channels before disconnecting"}, State}
+    case State#client_state.server of
+        undefined ->
+            {reply, {error, user_not_connected, "You are not connected to a server"}, State};
+        Server ->
+            case State#client_state.channels of
+                [] ->
+                    case catch genserver:request(Server, {disconnect, self()}) of
+                        ok ->
+                            NewState = State#client_state{server = undefined},
+                            {reply, ok, NewState};
+                        {'EXIT', _Reason} ->
+                            {reply, {error, server_not_reached, "Server not reached"}, State}
+                    end;
+                [_H | _T ] ->
+                    {reply, {error, leave_channels_first, "Leave channels before disconnecting"}, State}
+            end
     end;
 
 % Join channel
 handle(State, {join, Channel}) ->
     case lists:member(Channel, State#client_state.channels) of
         false ->
-            case request(State#client_state.server, {join, Channel, self()}) of
+            case catch genserver:request(State#client_state.server, {join, Channel, self()}) of
                 ok ->
                     NewState = State#client_state{ channels = [ Channel | State#client_state.channels ]},
                     {reply, ok, NewState};
-                Response ->
-                    {reply, Response, State}
+                {'EXIT', _Reason} ->
+                    {reply, {error, server_not_reached, "Server not reached"}, State}
             end;
         true ->
             {reply, {error, user_already_joined, "Channel already joined"}, State}
@@ -65,12 +75,12 @@ handle(State, {join, Channel}) ->
 handle(State, {leave, Channel}) ->
     case lists:member(Channel, State#client_state.channels) of
         true ->
-            case request(State#client_state.server, {leave, Channel, self()}) of
+            case catch genserver:request(State#client_state.server, {leave, Channel, self()}) of
                 ok ->
                     NewState = State#client_state{ channels = lists:delete(Channel, State#client_state.channels) },
                     {reply, ok, NewState};
-                Response ->
-                    {reply, Response, State}
+                {'EXIT', _Reason} ->
+                    {reply, {error, server_not_reached, "Server not reached"}, State}
             end;
         false ->
             {reply, {error, user_not_joined, "Not in channel"}, State}
@@ -80,11 +90,11 @@ handle(State, {leave, Channel}) ->
 handle(State, {msg_from_GUI, Channel, Message}) ->
     case lists:member(Channel, State#client_state.channels) of
         true ->
-            case request(State#client_state.server, {send_message, Channel, Message, self()}) of
+            case catch genserver:request(State#client_state.server, {send_message, Channel, Message, self()}) of
                 ok ->
                     {reply, ok, State};
-                Response ->
-                    {reply, Response, State}
+                {'EXIT', _Reason} ->
+                    {reply, {error, server_not_reached, "Server not reached"}, State}
             end;
         false ->
             {reply, {error, user_not_joined, "Not in channel"}, State}
@@ -112,30 +122,3 @@ handle(State, {nick, Nick}) ->
 handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Message}) ->
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
     {reply, ok, State}.
-
-%% -----------------------------------------------------------------------------
-
-%% request/4 sends a request to a specified PID (Server). If the response from
-%% the server is `ok` this function returns {reply, ok, NewState}. If the
-%% response is an error it returns {reply, {error, atom, Message}, OldState}.
-request(Server, Request) ->
-    io:fwrite("Sending request ~p~n", [Request]),
-    % Check the state of the server to see if the client is connected
-    case Server of
-        % If server is undefined the user is not connected and we respond with an error
-        undefined ->
-            io:fwrite("Server undefined~n", []),
-            {error, user_not_connected, "Not connected to server"};
-        % Otherwise we send the request
-        _ ->
-            case catch genserver:request(Server, Request) of
-                % If the server responds with `ok` we return the new state
-                ok ->
-                    io:fwrite("Response ok~n", []),
-                    ok;
-                % If the request exits in any way the server could not be reached
-                {'EXIT', _Reason} ->
-                    io:fwrite("EXIT reason ~p~n", [_Reason]),
-                    {error, server_not_reached, "Server not reached"}
-            end
-    end.
