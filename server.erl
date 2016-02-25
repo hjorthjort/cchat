@@ -62,9 +62,11 @@ handle(State, {join, ChannelName, UserPid}) ->
     Channel = get_channel_atom(State, ChannelName),
     % It is necessary to create channel even if user fails to connect later,
     % since we need to create a channel to contact it.
-    case whereis(get_channel_atom(State, ChannelName)) of
+    case whereis(Channel) of
         undefined ->
-            create_channel(State, Channel, ChannelName)
+            create_channel(Channel, ChannelName);
+        _ ->
+            ok
     end,
     User = get_user(State, UserPid),
     Channel ! {join, User},
@@ -123,8 +125,7 @@ get_user(State, Pid) ->
 %% Parameters:
 %%      Atom: the atom to register the new channel process with
 %%      UnqualifiedChannelName: channel name without the server prefix
-create_channel(State, Atom, UnqualifiedChannelName) ->
+create_channel(Atom, UnqualifiedChannelName) ->
     Pid = spawn(fun() -> channel:loop(channel:initial_state(Atom, UnqualifiedChannelName)) end),
     catch(unregister(Atom)),
-    register(Atom, Pid),
-    State#server_state{channels = [ Atom | State#server_state.channels]}.
+    register(Atom, Pid).
