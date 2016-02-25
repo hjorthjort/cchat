@@ -21,15 +21,15 @@ initial_state(ServerName) ->
 %% Connect the user by adding user to the server's list of users and returning
 %% ok
 %% Parameters:
-%%      NewPid, NewNick: details for the user
+%%      Pid, Nick: details for the user
 %% Possible errors:
 %%      none
-handle(State, {connect, NewPid, NewNick}) ->
-    case lists:filter(fun(Elem) -> NewNick == Elem#user.nick end,
+handle(State, {connect, Pid, Nick}) ->
+    case lists:filter(fun(Elem) -> Nick == Elem#user.nick end,
                       State#server_state.users) of
         [] ->
-            NewState = State#server_state{users = [ #user{ pid=NewPid,
-                                                           nick=NewNick} |
+            NewState = State#server_state{users = [ #user{ pid=Pid,
+                                                           nick=Nick} |
                                                     State#server_state.users
                                                   ]},
             {reply, ok, NewState};
