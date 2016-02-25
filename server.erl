@@ -127,5 +127,6 @@ get_user(State, Pid) ->
 %%      UnqualifiedChannelName: channel name without the server prefix
 create_channel(State, Atom, UnqualifiedChannelName) ->
     Pid = spawn(fun() -> channel:loop(channel:initial_state(Atom, UnqualifiedChannelName)) end),
+    catch(unregister(Atom)),
     register(Atom, Pid),
     State#server_state{channels = [ Atom | State#server_state.channels]}.
