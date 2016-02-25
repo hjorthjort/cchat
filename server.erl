@@ -23,7 +23,7 @@ initial_state(ServerName) ->
 %% Parameters:
 %%      Pid, Nick: details for the user
 %% Possible errors:
-%%      none
+%%      {error, user_already_connected}: when the requested nick is taken
 handle(State, {connect, Pid, Nick}) ->
     case lists:filter(fun(Elem) -> Nick == Elem#user.nick end,
                       State#server_state.users) of
@@ -93,6 +93,8 @@ handle(State, {leave, ChannelName, UserPid}) ->
 %%      none
 handle(State, {send_message, Channel, Message, SenderPid}) ->
     User = get_user(State, SenderPid),
+    % We trust the channel to handle this well, and if it crashes it should not
+    % influence the server
     spawn(fun() -> genserver:request(get_channel_atom(State, Channel),
                            {send_message, User, Message}) end),
     {reply, ok, State}.
