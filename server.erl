@@ -93,8 +93,8 @@ handle(State, {leave, ChannelName, UserPid}) ->
 %%      none
 handle(State, {send_message, Channel, Message, SenderPid}) ->
     User = get_user(State, SenderPid),
-    genserver:request(get_channel_atom(State, Channel),
-                           {send_message, User, Message}),
+    spawn(fun() -> genserver:request(get_channel_atom(State, Channel),
+                           {send_message, User, Message}) end),
     {reply, ok, State}.
 
 %% ---------------------------------------------------------------------------
