@@ -17,7 +17,7 @@
 %   pid: the pid (or name) of the user process
 %   nick: the user's nickname used for messages
 %   channels: the channels the user is connected to
--record(user, { pid, nick, channels=[] }).
+-record(user, { pid, nick }).
 
 % This record defines a channel on the server side.
 % It contains the following fields:
