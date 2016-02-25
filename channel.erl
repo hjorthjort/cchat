@@ -32,15 +32,13 @@ loop(State) ->
 %% Parameters in request:
 %%   User: A user record for the joining user
 handle(State, {join, User}) ->
-    NewState = State#channel_state{ users = [User | State#channel_state.users] },
-    NewState;
+    State#channel_state{ users = [User | State#channel_state.users] };
 
 %% Leave channel. If user is not in channel this has no effect.
 %% Parameters in request:
 %%   User: A user record for the leaving user
 handle(State, {leave, User}) ->
-    NewState = State#channel_state{ users = lists:delete(User, State#channel_state.users) },
-    NewState;
+    State#channel_state{ users = lists:delete(User, State#channel_state.users) };
 
 %% Send message
 %% Parameters in request:
