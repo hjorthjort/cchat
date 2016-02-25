@@ -45,10 +45,8 @@ handle(State, {leave, User}) ->
 %%   Sender: A user record for the sending user
 %%   Message: A string containing the message to send
 handle(State, {send_message, Sender, Message}) ->
-    UsersToSendTo = lists:filter(fun(User) -> Sender#user.pid =/= User#user.pid
-                                 end, State#channel_state.users),
     lists:foreach(fun(Receiver) -> send_message(State, Sender, Receiver,
-                                                Message) end, UsersToSendTo),
+                                                Message) end, State#channel_state.users),
     State.
 
 %% -----------------------------------------------------------------------------
@@ -57,5 +55,13 @@ handle(State, {send_message, Sender, Message}) ->
 %%   Sender: A user record for the sending user
 %%   Receiver: A user record for the user that should receive the message
 %%   Message: A string containing the message
+send_message(State, Sender, Receiver, Message) when Sender =:= Receiver ->
+    ok;
+
 send_message(State, Sender, Receiver, Message) ->
-    spawn(fun() -> genserver:request(Receiver#user.pid, {incoming_msg, State#channel_state.name, Sender#user.nick, Message}) end).
+    spawn(
+      fun() ->
+              genserver:request(Receiver#user.pid, {incoming_msg,
+                                                    State#channel_state.name,
+                                                    Sender#user.nick, Message})
+      end).
