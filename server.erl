@@ -126,6 +126,6 @@ get_user(State, Pid) ->
 %%      Atom: the atom to register the new channel process with
 %%      UnqualifiedChannelName: channel name without the server prefix
 create_channel(Atom, UnqualifiedChannelName) ->
-    Pid = spawn(fun() -> channel:loop(channel:initial_state(Atom, UnqualifiedChannelName)) end),
+    Pid = spawn(channel, loop, [channel:initial_state(Atom, UnqualifiedChannelName)]),
     catch(unregister(Atom)),
     register(Atom, Pid).

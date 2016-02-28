@@ -59,9 +59,6 @@ send_message(State, Sender, Receiver, Message) when Sender =:= Receiver ->
     ok;
 
 send_message(State, Sender, Receiver, Message) ->
-    spawn(
-      fun() ->
-              genserver:request(Receiver#user.pid, {incoming_msg,
+    spawn(genserver, request, [Receiver#user.pid, {incoming_msg,
                                                     State#channel_state.name,
-                                                    Sender#user.nick, Message})
-      end).
+                                                    Sender#user.nick, Message}]).
