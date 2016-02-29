@@ -96,7 +96,8 @@ handle(State, {msg_from_GUI, Channel, Message}) ->
             % Here we send the message directly to the channel, bypassing the server completely.
             % This makes for excellent concurrency since the server doesn't become a bottle neck.
             ChannelAtom = list_to_atom(atom_to_list(State#client_state.server) ++ Channel),
-            ChannelAtom ! {send_message, #user{ nick = State#client_state.nick, pid = self() }, Message},
+            % ChannelAtom ! {send_message, #user{ nick = State#client_state.nick, pid = self() }, Message},
+            genserver:request(ChannelAtom, {send_message, #user{ nick = State#client_state.nick, pid = self() }, Message}),
             {reply, ok, State};
         false ->
             {reply, {error, user_not_joined, "Not in channel"}, State}
