@@ -27,7 +27,6 @@
 
 % This record defines a channel on the server side.
 % It contains the following fields:
-%   atom: an atom that is used to identify the channel process
 %   name: the name of the channel
 %   users: a list of user records for all the users currently in the channel
--record(channel_state, { atom, name, users=[] }).
+-record(channel_state, { name, users=[] }).
