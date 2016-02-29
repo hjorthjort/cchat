@@ -14,6 +14,12 @@ initial_state(Nick, GUIName) ->
 %% current state), performing the needed actions, and returning a tuple
 %% {reply, Reply, NewState}, where Reply is the reply to be sent to the
 %% requesting process and NewState is the new state of the client.
+%%
+%% Pretty much all validation is made right here in the client and not on the
+%% server. This makes it easier to make the program run concurrently, since
+%% the server doesn't become as much of a bottle neck. Though one could argue
+%% that it would be more "correct" to let the server handle the validation,
+%% but this makes the code more complicated that it needs to be.
 
 %% Connect to server
 handle(State, {connect, Server}) ->
@@ -88,8 +94,7 @@ handle(State, {msg_from_GUI, Channel, Message}) ->
     case lists:member(Channel, State#client_state.channels) of
         true ->
             % Here we send the message directly to the channel, bypassing the server completely.
-            % This makes for excellent concurrency since the server doesn't become a bottleneck,
-            % though it doesn't verify if you are actually allowed to write to the channel.
+            % This makes for excellent concurrency since the server doesn't become a bottle neck.
             ChannelAtom = list_to_atom(atom_to_list(State#client_state.server) ++ Channel),
             ChannelAtom ! {send_message, #user{ nick = State#client_state.nick, pid = self() }, Message},
             {reply, ok, State};

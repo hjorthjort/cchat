@@ -9,18 +9,19 @@
 
 % This record defines the structure of the server process.
 % Add whatever other fields you need.
+%   name: the name of the server
 %   users: user records of all users on the server
-%   channels: channel records of all channels on the server
 -record(server_state, { name, users=[] }).
 
 % This record defines a user on the server side.
 % It contains the following fields:
 %   pid: the pid (or name) of the user process
 %   nick: the user's nickname used for messages
-%   channels: the channels the user is connected to
 -record(user, { pid, nick }).
 
 % This record defines a channel on the server side.
 % It contains the following fields:
+%   atom: an atom that is used to identify the channel process
+%   name: the name of the channel
 %   users: a list of user records for all the users currently in the channel
 -record(channel_state, { atom, name, users=[] }).
