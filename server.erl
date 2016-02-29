@@ -34,7 +34,6 @@ handle(State, {connect, Pid, Nick}) ->
                                                   ]},
             {reply, ok, NewState};
         [_H | _T] ->
-            io:fwrite("~p~n", [_H | _T]),
             {reply, {error, user_already_connected}, State}
     end;
 
