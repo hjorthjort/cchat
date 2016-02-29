@@ -81,20 +81,6 @@ handle(State, {leave, ChannelName, UserPid}) ->
     User = get_user(State, UserPid),
     Channel = get_channel_atom(State, ChannelName),
     Channel ! {leave, User},
-    {reply, ok, State};
-
-%% Sends a message to a channel. Assumes channel exists.
-%% Parameters:
-%%      Channel: the name of the channel to send to (starts with '#')
-%%      Message: the message to send
-%%      SenderPid: the pid to the client wishing to send the message
-%% Possible errors:
-%%      none
-handle(State, {send_message, Channel, Message, SenderPid}) ->
-    User = get_user(State, SenderPid),
-    % We trust the channel to handle this well, and if it crashes it should not
-    % influence the server
-    get_channel_atom(State, Channel) ! {send_message, User, Message},
     {reply, ok, State}.
 
 %% ---------------------------------------------------------------------------
