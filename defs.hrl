@@ -7,6 +7,12 @@
 %   channels: a list of channel names for all the channels the user is in
 -record(client_state, { nick, gui, server, channels=[] }).
 
+% This record defines a channel on the client side.
+% It contains the following fields:
+%   name: the name of the channel (starts with '#')
+%   pid: the pid to the channel process
+-record(channel, { name, pid }).
+
 % This record defines the structure of the server process.
 % Add whatever other fields you need.
 %   name: the name of the server
