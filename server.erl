@@ -58,19 +58,18 @@ handle(State, {disconnect, Pid}) ->
 %% Possible errors:
 %%      none
 handle(State, {join, ChannelName, UserPid}) ->
-    Channel = get_channel_atom(State, ChannelName),
+    ChannelAtom = get_channel_atom(State, ChannelName),
     % It is necessary to create channel even if user fails to connect later,
     % since we need to create a channel to contact it.
-    case whereis(Channel) of
+    case whereis(ChannelAtom) of
         undefined ->
-            create_channel(Channel, ChannelName);
+            create_channel(State, ChannelName);
         _ ->
             ok
     end,
     User = get_user(State, UserPid),
-    % Channel ! {join, User},
-    genserver:request(Channel, {join, User}),
-    {reply, ok, State};
+    genserver:request(ChannelAtom, {join, User}),
+    {reply, ChannelAtom, State};
 
 %% Let user leave a channel that they are connected to. Assumes channel exists.
 %% Parameters:
@@ -79,19 +78,18 @@ handle(State, {join, ChannelName, UserPid}) ->
 %% Possible errors:
 %%      none
 handle(State, {leave, ChannelName, UserPid}) ->
+    ChannelAtom = get_channel_atom(State, ChannelName),
     User = get_user(State, UserPid),
-    Channel = get_channel_atom(State, ChannelName),
-    % Channel ! {leave, User},
-    genserver:request(Channel, {leave, User}),
+    genserver:request(ChannelAtom, {leave, User}),
     {reply, ok, State}.
 
 %% ---------------------------------------------------------------------------
 
 %% Returns the atom used to identify a channel.
 %% Parameters:
-%%      Channel: the name of the channel (starts with '#')
-get_channel_atom(State, Channel) ->
-    list_to_atom(State#server_state.name ++ Channel).
+%%      ChannelName: the name of the channel (starts with '#')
+get_channel_atom(State, ChannelName) ->
+    list_to_atom(State#server_state.name ++ ChannelName).
 
 %% ---------------------------------------------------------------------------
 
@@ -110,10 +108,7 @@ get_user(State, Pid) ->
 
 %% Creates a new channel and returns a new server state.
 %% Parameters:
-%%      Atom: the atom to register the new channel process with
-%%      UnqualifiedChannelName: channel name without the server prefix
-create_channel(Atom, UnqualifiedChannelName) ->
-    % Pid = spawn(channel, loop, [channel:initial_state(Atom, UnqualifiedChannelName)]),
-    % catch(unregister(Atom)),
-    % register(Atom, Pid).
-    genserver:start(Atom, channel:initial_state(Atom, UnqualifiedChannelName), fun channel:handle/2).
+%%      ChannelName: channel name without the server prefix (starts with '#')
+create_channel(State, ChannelName) ->
+    ChannelAtom = get_channel_atom(State, ChannelName),
+    genserver:start(ChannelAtom, channel:initial_state(ChannelName), fun channel:handle/2).
