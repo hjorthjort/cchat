@@ -55,9 +55,6 @@ handle(State, {send_message, Sender, Message}) ->
 %%   Sender: A user record for the sending user
 %%   Receiver: A user record for the user that should receive the message
 %%   Message: A string containing the message
-send_message(State, Sender, Receiver, Message) when Sender =:= Receiver ->
-    ok;
-
 send_message(State, Sender, Receiver, Message) ->
     spawn(genserver, request, [Receiver#user.pid, {incoming_msg,
                                                     State#channel_state.name,

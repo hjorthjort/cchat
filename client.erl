@@ -87,12 +87,8 @@ handle(State, {leave, Channel}) ->
 handle(State, {msg_from_GUI, Channel, Message}) ->
     case lists:member(Channel, State#client_state.channels) of
         true ->
-            case catch genserver:request(State#client_state.server, {send_message, Channel, Message, self()}) of
-                ok ->
-                    {reply, ok, State};
-                {'EXIT', _Reason} ->
-                    {reply, {error, server_not_reached, "Server not reached"}, State}
-            end;
+            list_to_atom(atom_to_list(State#client_state.server) ++ Channel) ! {send_message, #user{ nick = State#client_state.nick, pid = self() }, Message},
+            {reply, ok, State};
         false ->
             {reply, {error, user_not_joined, "Not in channel"}, State}
     end;
@@ -116,6 +112,9 @@ handle(State, {nick, Nick}) ->
     {reply, Data, NewState};
 
 %% Incoming message
+handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, State#client_state.nick, Message}) ->
+    ok;
+
 handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Message}) ->
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
     {reply, ok, State}.
