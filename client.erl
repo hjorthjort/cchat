@@ -48,7 +48,7 @@ handle(State, disconnect) ->
                         {'EXIT', _Reason} ->
                             {reply, {error, server_not_reached, "Server not reached"}, State}
                     end;
-                [_H | _T ] ->
+                [_H | _T] ->
                     {reply, {error, leave_channels_first, "Leave channels before disconnecting"}, State}
             end
     end;
@@ -111,10 +111,11 @@ handle(State, {nick, Nick}) ->
     end,
     {reply, Data, NewState};
 
-%% Incoming message
-handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, State#client_state.nick, Message}) ->
-    ok;
+%% Incoming message from myself
+handle(State, {incoming_msg, _Channel, Name, _Message}) when State#client_state.nick =:= Name ->
+    {reply, ok, State};
 
+%% Incoming message from someone else
 handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Message}) ->
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
     {reply, ok, State}.
