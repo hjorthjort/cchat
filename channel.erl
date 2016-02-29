@@ -1,5 +1,5 @@
 -module(channel).
--export([loop/1, handle/2, initial_state/2]).
+-export([handle/2, initial_state/2]).
 -include_lib("./defs.hrl").
 
 %% Produce initial state
@@ -7,16 +7,7 @@ initial_state(Atom, Name) ->
     #channel_state {
        atom = Atom,
        name = Name
-      }.
-
-%% -----------------------------------------------------------------------------
-
-loop(State) ->
-    receive
-        Request ->
-            NewState = handle(State, Request),
-            loop(NewState)
-    end.
+    }.
 
 %% -----------------------------------------------------------------------------
 
