@@ -60,27 +60,27 @@ handle(State, disconnect) ->
     end;
 
 % Join channel
-handle(State, {join, Channel}) ->
-    case lists:member(Channel, State#client_state.channels) of
+handle(State, {join, ChannelName}) ->
+    case channel_is_joined(State, ChannelName) of
         false ->
-            case catch genserver:request(State#client_state.server, {join, Channel, self()}) of
-                ok ->
-                    NewState = State#client_state{ channels = [ Channel | State#client_state.channels ]},
-                    {reply, ok, NewState};
+            case catch genserver:request(State#client_state.server, {join, ChannelName, self()}) of
                 {'EXIT', _Reason} ->
-                    {reply, {error, server_not_reached, "Server not reached"}, State}
+                    {reply, {error, server_not_reached, "Server not reached"}, State};
+                ChannelPid ->
+                    NewState = add_channel(State, ChannelName, ChannelPid),
+                    {reply, ok, NewState}
             end;
         true ->
             {reply, {error, user_already_joined, "Channel already joined"}, State}
     end;
 
 %% Leave channel
-handle(State, {leave, Channel}) ->
-    case lists:member(Channel, State#client_state.channels) of
+handle(State, {leave, ChannelName}) ->
+    case channel_is_joined(State, ChannelName) of
         true ->
-            case catch genserver:request(State#client_state.server, {leave, Channel, self()}) of
+            case catch genserver:request(State#client_state.server, {leave, ChannelName, self()}) of
                 ok ->
-                    NewState = State#client_state{ channels = lists:delete(Channel, State#client_state.channels) },
+                    NewState = remove_channel(State, ChannelName),
                     {reply, ok, NewState};
                 {'EXIT', _Reason} ->
                     {reply, {error, server_not_reached, "Server not reached"}, State}
@@ -90,14 +90,13 @@ handle(State, {leave, Channel}) ->
     end;
 
 % Sending messages
-handle(State, {msg_from_GUI, Channel, Message}) ->
-    case lists:member(Channel, State#client_state.channels) of
+handle(State, {msg_from_GUI, ChannelName, Message}) ->
+    case channel_is_joined(State, ChannelName) of
         true ->
             % Here we send the message directly to the channel, bypassing the server completely.
             % This makes for excellent concurrency since the server doesn't become a bottle neck.
-            ChannelAtom = list_to_atom(atom_to_list(State#client_state.server) ++ Channel),
-            % ChannelAtom ! {send_message, #user{ nick = State#client_state.nick, pid = self() }, Message},
-            genserver:request(ChannelAtom, {send_message, #user{ nick = State#client_state.nick, pid = self() }, Message}),
+            #channel{pid = ChannelPid} = get_channel(State, ChannelName),
+            genserver:request(ChannelPid, {send_message, #user{nick = State#client_state.nick, pid = self()}, Message}),
             {reply, ok, State};
         false ->
             {reply, {error, user_not_joined, "Not in channel"}, State}
@@ -125,3 +124,37 @@ handle(State, {incoming_msg, _Channel, Name, _Message}) when State#client_state.
 handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Message}) ->
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
     {reply, ok, State}.
+
+%% -----------------------------------------------------------------------------
+
+get_channel(State, ChannelName) ->
+    case lists:filter(fun(Channel) -> Channel#channel.name =:= ChannelName end, State#client_state.channels) of
+        [] ->
+            undefined;
+        [Channel | _T] ->
+            Channel
+    end.
+
+%% -----------------------------------------------------------------------------
+
+channel_is_joined(State, ChannelName) ->
+    case get_channel(State, ChannelName) of
+        undefined ->
+            false;
+        _Channel ->
+            true
+    end.
+
+%% -----------------------------------------------------------------------------
+
+remove_channel(State, ChannelName) ->
+    Channels = State#client_state.channels,
+    NewChannelList = lists:filter(fun(Channel) -> Channel#channel.name =/= ChannelName end, Channels),
+    State#client_state{channels = NewChannelList}.
+
+%% -----------------------------------------------------------------------------
+
+add_channel(State, ChannelName, ChannelPid) ->
+    NewChannel = #channel{name = ChannelName, pid = ChannelPid},
+    OldChannelList = State#client_state.channels,
+    State#client_state{channels = [NewChannel | OldChannelList]}.
