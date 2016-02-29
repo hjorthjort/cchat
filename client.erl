@@ -99,18 +99,14 @@ handle(State, {msg_from_GUI, Channel, Message}) ->
 
 %% Get current nick
 handle(State, whoami) ->
-    io:fwrite("~p: whoami~n", [State#client_state.nick]),
     {reply, State#client_state.nick, State};
 
 %% Change nick
 handle(State, {nick, Nick}) ->
-    io:fwrite("~p: Change nick to ~p~n", [State#client_state.nick, Nick]),
     {Data, NewState} = case State#client_state.server of
         undefined ->
-            io:fwrite("~p: Nick changed to ~p~n", [State#client_state.nick, Nick]),
             {ok, State#client_state{nick = Nick}};
         _ ->
-            io:fwrite("~p: User already connected~n", [State#client_state.nick]),
             {{error, user_already_connected, "Can't change nick when connected to a server"}, State}
     end,
     {reply, Data, NewState};
