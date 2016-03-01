@@ -28,10 +28,8 @@ handle(State, {connect, Pid, Nick}) ->
     case lists:filter(fun(Elem) -> Nick == Elem#user.nick end,
                       State#server_state.users) of
         [] ->
-            NewState = State#server_state{users = [ #user{ pid=Pid,
-                                                           nick=Nick} |
-                                                    State#server_state.users
-                                                  ]},
+            User = #user{pid = Pid, nick = Nick},
+            NewState = State#server_state{users = [User | State#server_state.users]},
             {reply, ok, NewState};
         [_H | _T] ->
             {reply, {error, user_already_connected}, State}
