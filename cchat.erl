@@ -41,8 +41,8 @@ assign_tasks([], _) ->
     [];
 
 assign_tasks(Users, Tasks) ->
-      [  {lists:nth(((N-1) rem length(Users)) + 1, Users), Task}
-      || {N,Task} <- lists:zip(lists:seq(1,length(Tasks)), Tasks) ].
+    [{lists:nth(((N-1) rem length(Users)) + 1, Users), Task}
+        || {N,Task} <- lists:zip(lists:seq(1,length(Tasks)), Tasks)].
 
 wait_for_responses(Results, []) ->
     lists:reverse(Results);
