@@ -79,7 +79,11 @@ handle(State, {leave, ChannelName, UserPid}) ->
     ChannelAtom = get_channel_atom(State, ChannelName),
     User = get_user(State, UserPid),
     genserver:request(ChannelAtom, {leave, User}),
-    {reply, ok, State}.
+    {reply, ok, State};
+
+handle(State, get_user_pids) ->
+    Pids = [ Pid || #user{pid = Pid} <- State#server_state.users],
+    {reply, Pids, State}.
 
 %% ---------------------------------------------------------------------------
 

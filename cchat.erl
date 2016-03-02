@@ -1,6 +1,6 @@
 % Top level module
 -module(cchat).
--export([server/0,client/0,start/0,start2/0]).
+-export([server/0,client/0,start/0,start2/0,send_job/3]).
 -include_lib("./defs.hrl").
 
 %% Start a server
@@ -22,3 +22,16 @@ start2() ->
     server(),
     client(),
     client().
+
+send_job(Server, F, Inputs) ->
+    ClientPids = genserver:request(list_to_atom(Server), get_user_pids),
+    ReferencesAndInputs = lists:zip(lists:seq(1, length(Inputs)), Inputs),
+    ReferencesAndInputs.
+
+wait_for_responses(Results, []) ->
+    Results;
+
+wait_for_responses(Results, [Reference | Tail]) ->
+    receive {Reference, Result} ->
+        wait_for_responses([Result | Results], Tail)
+    end.
