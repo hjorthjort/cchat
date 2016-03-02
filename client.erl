@@ -123,7 +123,10 @@ handle(State, {incoming_msg, _Channel, Name, _Message}) when State#client_state.
 %% Incoming message from someone else
 handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Message}) ->
     gen_server:call(list_to_atom(GUIName), {msg_to_GUI, Channel, Name ++ "> " ++ Message}),
-    {reply, ok, State}.
+    {reply, ok, State};
+
+handle(State, {job, {Fun, Ref, Input}}) ->
+    {reply, {Ref, Fun(Input)}, State}.
 
 %% -----------------------------------------------------------------------------
 

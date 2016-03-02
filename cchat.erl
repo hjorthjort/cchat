@@ -26,7 +26,19 @@ start2() ->
 send_job(Server, F, Inputs) ->
     ClientPids = genserver:request(list_to_atom(Server), get_user_pids),
     ReferencesAndInputs = lists:zip(lists:seq(1, length(Inputs)), Inputs),
-    ReferencesAndInputs.
+    TasksAndClients = assign_tasks(ClientPids, ReferencesAndInputs),
+    ReturnPid = self(),
+    lists:foreach(fun({Client, {Ref, Input}}) -> spawn(fun() -> ReturnPid ! genserver:request(Client, {job, {F, Ref, Input}}) end) end, TasksAndClients),
+    wait_for_responses([], ReferencesAndInputs).
+
+%cchat:send_job("shire", fun(X) -> X*2 end, [11,12,13])
+
+assign_tasks([], _) ->
+    [];
+
+assign_tasks(Users, Tasks) ->
+      [  {lists:nth(((N-1) rem length(Users)) + 1, Users), Task}
+      || {N,Task} <- lists:zip(lists:seq(1,length(Tasks)), Tasks) ].
 
 wait_for_responses(Results, []) ->
     Results;
