@@ -25,10 +25,10 @@ start2() ->
 
 send_job(Server, F, Inputs) ->
     ClientPids = genserver:request(list_to_atom(Server), get_user_pids),
-    ReferencesAndInputs = lists:zip(lists:seq(1, length(Inputs)), Inputs),
-    TasksAndClients = assign_tasks(ClientPids, ReferencesAndInputs),
+    % Create a unique reference for every input value
+    TasksAndClients = assign_tasks(ClientPids, Inputs),
     lists:foreach(fun(Element) -> give_task_to_client(Element, F) end, TasksAndClients),
-    wait_for_responses([], ReferencesAndInputs).
+    wait_for_responses([], TasksAndClients).
 
 give_task_to_client({Client, {Ref, Input}}, F) ->
     ReturnPid = self(),
@@ -39,13 +39,13 @@ assign_tasks([], _) ->
     [];
 
 assign_tasks(Users, Tasks) ->
-    [{lists:nth(((N-1) rem length(Users)) + 1, Users), Task}
+    [{lists:nth(((N-1) rem length(Users)) + 1, Users), {make_ref(), Task}}
         || {N,Task} <- lists:zip(lists:seq(1,length(Tasks)), Tasks)].
 
 wait_for_responses(Results, []) ->
     lists:reverse(Results);
 
-wait_for_responses(Results, [ {Reference, _Input} | Tail]) ->
+wait_for_responses(Results, [ {_Client, {Reference, _Input}} | Tail]) ->
     receive
         {Reference, Result} ->
             io:format("CCHAT received ~p~n", [{Reference, Result}]),
