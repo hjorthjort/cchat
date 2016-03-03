@@ -129,7 +129,13 @@ handle(State, {job, {Fun, Ref, Input}}) ->
     Result = Fun(Input),
     NewJobResults = maps:put(Ref, Result, State#client_state.job_results),
     NewState = State#client_state{job_results = NewJobResults},
-    {reply, ok, NewState}.
+    {reply, ok, NewState};
+
+handle(State, {pop_result, Ref}) ->
+    Result = maps:get(Ref, State#client_state.job_results),
+    NewResults = maps:remove(Ref, State#client_state.job_results),
+    NewState = State#client_state{job_results = NewResults},
+    {reply, Result, NewState}.
 
 %% -----------------------------------------------------------------------------
 
