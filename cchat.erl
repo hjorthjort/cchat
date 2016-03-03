@@ -31,7 +31,7 @@ send_job(Server, F, Inputs) ->
     wait_for_responses([], TasksAndClients).
 
 give_task_to_client({Client, {Ref, Input}}, F) ->
-    io:format("~p F: ~p self()~p~n", [{Client,{Ref, Input}}, F]),
+    io:format("~p F: ~p ~n", [{Client,{Ref, Input}}, F]),
     spawn(genserver, request, [Client, {job, {F, Ref, Input}}]).
 
 assign_tasks([], _) ->
