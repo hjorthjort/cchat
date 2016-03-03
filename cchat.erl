@@ -45,7 +45,6 @@ send_job(Server, F, Inputs) ->
 %%     F - The function that should be used to compute the result of the task input
 give_task_to_client({Client, {Ref, Input}}, F) ->
     ReturnPid = self(),
-    io:format("~p F: ~p self()~p~n", [{Client,{Ref, Input}}, F, ReturnPid]),
     spawn(fun() -> ReturnPid ! genserver:request(Client, {job, {F, Ref, Input}}) end).
 
 %% Assigns an input to a client, and generates a unique reference that can be used
@@ -76,6 +75,5 @@ wait_for_responses(Responses, []) ->
 wait_for_responses(Responses, [ Reference | UnhandledReferences ]) ->
     receive
         {Reference, Response} ->
-            io:format("CCHAT received ~p~n", [{Reference, Response}]),
             wait_for_responses([Response | Responses], UnhandledReferences)
     end.
