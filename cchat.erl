@@ -45,5 +45,5 @@ wait_for_responses(Results, []) ->
     lists:reverse(Results);
 
 wait_for_responses(Results, [ {Client, {Reference, _Input}} | Tail]) ->
-    Result = genserver:request(Client, {pop_result, Reference}, infinite),
+    Result = genserver:request(Client, {pop_result, Reference}, infinity),
     wait_for_responses([Result | Results], Tail).
