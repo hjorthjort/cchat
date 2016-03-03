@@ -34,7 +34,8 @@ send_job(Server, F, Inputs) ->
     % Create a unique reference for every input value
     Tasks = assign_tasks(ClientPids, Inputs),
     lists:foreach(fun(Task) -> give_task_to_client(Task, F) end, Tasks),
-    wait_for_responses([], Tasks).
+    References = [ Ref || {_Client, {Ref, _Input}} <- Tasks ],
+    wait_for_responses([], References).
 
 %% Sends a request to calculate a task. A task should be pre-assigned to a
 %% specific client.
@@ -59,12 +60,13 @@ assign_tasks(Users, Tasks) ->
     [{lists:nth(((N-1) rem length(Users)) + 1, Users), {make_ref(), Task}}
         || {N,Task} <- lists:zip(lists:seq(1,length(Tasks)), Tasks)].
 
-wait_for_responses(Results, []) ->
-    lists:reverse(Results);
 
-wait_for_responses(Results, [ {_Client, {Reference, _Input}} | Tail]) ->
+wait_for_responses(Responses, []) ->
+    lists:reverse(Responses);
+
+wait_for_responses(Responses, [ Reference | UnhandledReferences ]) ->
     receive
-        {Reference, Result} ->
-            io:format("CCHAT received ~p~n", [{Reference, Result}]),
-            wait_for_responses([Result | Results], Tail)
+        {Reference, Response} ->
+            io:format("CCHAT received ~p~n", [{Reference, Response}]),
+            wait_for_responses([Response | Responses], UnhandledReferences)
     end.
