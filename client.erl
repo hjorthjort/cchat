@@ -127,7 +127,8 @@ handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Me
 
 handle(State, {job, {Fun, Ref, Input}}) ->
     Result = Fun(Input),
-    NewState = State#client_state{job_results = [{Ref, Result} | State#client_state.job_results]},
+    NewJobResults = maps:put(Ref, Result, State#client_state.job_results),
+    NewState = State#client_state{job_results = NewJobResults},
     {reply, ok, NewState}.
 
 %% -----------------------------------------------------------------------------
