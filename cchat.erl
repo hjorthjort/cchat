@@ -29,8 +29,6 @@ send_job(Server, F, Inputs) ->
     TasksAndClients = assign_tasks(ClientPids, ReferencesAndInputs),
     lists:foreach(fun(Element) -> give_task_to_client(Element, F) end, TasksAndClients),
     wait_for_responses([], ReferencesAndInputs).
-%cchat:start2(),
-%cchat:send_job("shire", fun(X) -> X*2 end, [11,12,13]).
 
 give_task_to_client({Client, {Ref, Input}}, F) ->
     ReturnPid = self(),
