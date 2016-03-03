@@ -5,6 +5,8 @@ all: *.erl *.hrl lex.xrl grm.yrl
 clean:
 	rm -f *.beam grm.erl lex.erl
 
+it_happen: run_tests run_robustness_tests run_perf_tests run_workers_tests
+
 run_tests: all
 	erl +P 1000000 -noshell -eval "eunit:test(test_client), halt()"
 
