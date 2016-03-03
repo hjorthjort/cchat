@@ -47,6 +47,11 @@ give_task_to_client({Client, {Ref, Input}}, F) ->
     io:format("~p F: ~p self()~p~n", [{Client,{Ref, Input}}, F, ReturnPid]),
     spawn(fun() -> ReturnPid ! genserver:request(Client, {job, {F, Ref, Input}}) end).
 
+%% Assigns an input to a client, and generates a unique reference that can be used
+%% to identify the result of that particular input.
+%% Parameters:
+%%     Users - A list of pids to client processes
+%%     Tasks {Ref, Input} - A list of tasks consiting of references and inputs
 assign_tasks([], _) ->
     [];
 
