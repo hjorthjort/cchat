@@ -36,6 +36,12 @@ send_job(Server, F, Inputs) ->
     lists:foreach(fun(Task) -> give_task_to_client(Task, F) end, Tasks),
     wait_for_responses([], Tasks).
 
+%% Sends a request to calculate a task. A task should be pre-assigned to a
+%% specific client.
+%% Paremeters:
+%%     Task {Client, {Ref, Input}} - The task that we want to compute. A task
+%%                                   consists of a client, a reference and an input
+%%     F - The function that should be used to compute the result of the task input
 give_task_to_client({Client, {Ref, Input}}, F) ->
     ReturnPid = self(),
     io:format("~p F: ~p self()~p~n", [{Client,{Ref, Input}}, F, ReturnPid]),
