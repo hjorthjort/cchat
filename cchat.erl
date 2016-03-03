@@ -60,6 +60,15 @@ assign_tasks(Users, Tasks) ->
     [{lists:nth(((N-1) rem length(Users)) + 1, Users), {make_ref(), Task}}
         || {N,Task} <- lists:zip(lists:seq(1,length(Tasks)), Tasks)].
 
+%% ------------------------------------------------------------------------------
+%% Wait for responses to a set of messages defined by a list of references.
+%% Returns a list of responses in messages of the form {Reference, Response}.
+%% The order in the returned list matches the order in the list of references.
+%%
+%% Parameters:
+%%      Results: Already finished results, in reverse order
+%%      References: A list of references for which we will get corresponding
+%%          messages
 
 wait_for_responses(Responses, []) ->
     lists:reverse(Responses);
