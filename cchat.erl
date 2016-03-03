@@ -26,7 +26,7 @@ start2() ->
 send_job(Server, F, Inputs) ->
     ClientPids = genserver:request(list_to_atom(Server), get_user_pids),
     % Create a unique reference for every input value
-    TasksAndClients = assign_tasks(ClientPids, Tasks),
+    TasksAndClients = assign_tasks(ClientPids, Inputs),
     lists:foreach(fun(Element) -> give_task_to_client(Element, F) end, TasksAndClients),
     wait_for_responses([], TasksAndClients).
 
