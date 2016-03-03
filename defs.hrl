@@ -5,7 +5,7 @@
 %   gui: the name (or Pid) of the GUI process.
 %   server: the server which the client is currently connected to
 %   channels: a list of channel names for all the channels the user is in
--record(client_state, { nick, gui, server, channels=[] }).
+-record(client_state, { nick, gui, server, channels=[], job_results=[] }).
 
 % This record defines a channel on the client side.
 % It contains the following fields:

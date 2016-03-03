@@ -126,8 +126,9 @@ handle(State = #client_state { gui = GUIName }, {incoming_msg, Channel, Name, Me
     {reply, ok, State};
 
 handle(State, {job, {Fun, Ref, Input}}) ->
-    io:format("Client ~p received job.~n", [self()]),
-    {reply, {Ref, Fun(Input)}, State}.
+    Result = Fun(Input),
+    NewState = State#client_state{job_results = [{Ref, Result} | State#client_state.job_results]},
+    {reply, ok, NewState}.
 
 %% -----------------------------------------------------------------------------
 
