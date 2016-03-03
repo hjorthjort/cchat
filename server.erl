@@ -32,7 +32,7 @@ handle(State, {connect, Pid, Nick}) ->
             NewState = State#server_state{users = [User | State#server_state.users]},
             {reply, ok, NewState};
         [_H | _T] ->
-            {reply, {error, user_already_connected}, State}
+            {reply, {error, nick_taken}, State}
     end;
 
 %% Disconnect the user by removing from the server's list of user and returning

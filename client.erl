@@ -30,8 +30,8 @@ handle(State, {connect, Server}) ->
                 ok ->
                     NewState = State#client_state{server = ServerAtom},
                     {reply, ok, NewState};
-                {error, user_already_connected} ->
-                    {reply, {error, user_already_connected, "Your nick is already taken"}, State};
+                {error, nick_taken} ->
+                    {reply, {error, nick_taken, "Your nick is already taken"}, State};
                 {'EXIT', _Reason} ->
                     {reply, {error, server_not_reached, "Server not reached"}, State}
             end;
