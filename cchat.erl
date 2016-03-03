@@ -23,6 +23,12 @@ start2() ->
     client(),
     client().
 
+%% Sends jobs to all clients connected to the specified server. The job consists
+%% of running a function with a specified input.
+%% Parameters:
+%%     Server - The name of the server to use
+%%     F - The function that we want to run
+%%     Inputs - A list of inputs that we want to calculate with the specified function
 send_job(Server, F, Inputs) ->
     ClientPids = genserver:request(list_to_atom(Server), get_user_pids),
     % Create a unique reference for every input value
