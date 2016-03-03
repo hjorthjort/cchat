@@ -23,7 +23,7 @@ start2() ->
     client(),
     client().
 
-%% Sends jobs to all clients connected to the specified server. The job consists
+%% Sends jobs to all clients connected to the specified server. A job consists
 %% of running a function with a specified input.
 %% Parameters:
 %%     Server - The name of the server to use
