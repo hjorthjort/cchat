@@ -1123,8 +1123,8 @@ workers() ->
   _ClientAtoms = lists:map(Fjoin, UsersSeq),
   output_on(),
 
-  Function = fun(X) -> timer:sleep(200 * abs(X)), X + X end,
-  Input = [4,1,7,3,-2,5,2],
+  Function = fun(X) -> timer:sleep(3000), X + X end,
+  Input = lists:seq(1,8),
 
   Gold = lists:map(fun(X) -> X + X end, Input),
 

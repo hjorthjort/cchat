@@ -36,4 +36,4 @@ run_distributed_tests: all
 	erl -noshell -name "testsuite@127.0.0.1" -setcookie dchat -eval "eunit:test(test_remote), halt()"
 
 run_workers_tests: all
-	erl -noshell -eval "eunit:test({timeout, 10, {test,test_client,workers}}), halt()"
+	erl -noshell -eval "eunit:test({timeout, 60, {test,test_client,workers}}), halt()"
