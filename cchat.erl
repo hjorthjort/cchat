@@ -45,7 +45,7 @@ send_job(Server, F, Inputs) ->
 %%     F - The function that should be used to compute the result of the task input
 give_task_to_client({Client, {Ref, Input}}, F) ->
     ReturnPid = self(),
-    spawn(fun() -> ReturnPid ! genserver:request(Client, {job, {F, Ref, Input}}) end).
+    spawn(fun() -> ReturnPid ! genserver:request(Client, {job, {F, Ref, Input}}, infinity) end).
 
 %% Assigns an input to a client, and generates a unique reference that can be used
 %% to identify the result of that particular input.
